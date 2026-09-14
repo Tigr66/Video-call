@@ -7,12 +7,14 @@
 
         // Environment Settings
         // See also https://aka.ms/tsconfig/module
-        "module": "ESNext",
+        "module": "preserve",
         "target": "ES2023",
         "moduleResolution": "bundler",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "types": [],
+        "types": [
+            "node"
+        ],
         // For nodejs:
         // "lib": ["esnext"],
         // "types": ["node"],
@@ -44,6 +46,7 @@
         "moduleDetection": "force",
         "skipLibCheck": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "resolveJsonModule": true
     }
 }
