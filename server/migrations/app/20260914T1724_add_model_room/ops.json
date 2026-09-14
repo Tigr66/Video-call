@@ -1,0 +1,100 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.room",
+    "label": "Create table \"room\"",
+    "summary": "Creates table \"room\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "room"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"room\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"room\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"room\"",
+        "sql": "CREATE TABLE \"public\".\"room\" (\n  \"code\" text NOT NULL,\n  \"id\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"room\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"room\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.room.room_code_key",
+    "label": "Add unique constraint on \"room\" (code)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "room_code_key",
+        "table": "room"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"room_code_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "room_code_key",
+          "public",
+          "\"public\".\"room\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"room_code_key\"",
+        "sql": "ALTER TABLE \"public\".\"room\" ADD CONSTRAINT \"room_code_key\" UNIQUE (\"code\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"room_code_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "room_code_key",
+          "public",
+          "\"public\".\"room\""
+        ]
+      }
+    ]
+  }
+]
