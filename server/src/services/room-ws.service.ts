@@ -41,6 +41,14 @@ export class RoomWsService extends BaseWsService {
                     if (data.type === "join") {
                         this.joinRoom(code, peerId, data.name, ws);
                     }
+
+                    if (data.type === "offer") {
+                        this.handleOffer(code, data.targetPeerId, data.offer);
+                    }
+
+                    if (data.type === "answer") {
+                        this.handleAnswer(code, data.targetPeerId, data.answer);
+                    }
                 });
 
                 ws.on("error", (e) => {
@@ -64,11 +72,17 @@ export class RoomWsService extends BaseWsService {
         name: string,
         ws: WebSocket,
     ) {
-        let participants = this.rooms.get(code);
+        let participants = this.getParticipants(code);
 
         if (!participants) {
             participants = new Map<string, Participant>();
             this.rooms.set(code, participants);
+        }
+
+        if (participants.size >= 4) {
+            this.sendError(ws, "Room is full. Maximum 4 participants");
+            ws.close();
+            return;
         }
 
         participants.forEach((participant) => {
@@ -96,7 +110,7 @@ export class RoomWsService extends BaseWsService {
     }
 
     private leaveRoom(code: string, peerId: string) {
-        const participants = this.rooms.get(code);
+        const participants = this.getParticipants(code);
 
         if (!participants) return;
 
@@ -118,5 +132,51 @@ export class RoomWsService extends BaseWsService {
         if (participants.size === 0) {
             this.rooms.delete(code);
         }
+    }
+
+    private handleOffer(
+        code: string,
+        targetPeerId: string,
+        offer: RTCSessionDescriptionInit,
+    ) {
+        const participants = this.getParticipants(code);
+
+        if (!participants) return;
+
+        const participant = participants.get(targetPeerId);
+
+        if (!participant) return;
+
+        participant.ws.send(
+            JSON.stringify({
+                type: "offer",
+                offer,
+            }),
+        );
+    }
+
+    private handleAnswer(
+        code: string,
+        targetPeerId: string,
+        answer: RTCSessionDescriptionInit,
+    ) {
+        const participants = this.getParticipants(code);
+
+        if (!participants) return;
+
+        const participant = participants.get(targetPeerId);
+
+        if (!participant) return;
+
+        participant.ws.send(
+            JSON.stringify({
+                type: "answer",
+                answer,
+            }),
+        );
+    }
+
+    private getParticipants(code: string) {
+        return this.rooms.get(code);
     }
 }
