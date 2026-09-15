@@ -1,8 +1,9 @@
 import WebSocket from "ws";
 import { Request } from "express";
-import { Participant } from "../types/room-ws.types";
+import { Participant, RoomMessage } from "../types/room-ws.types";
 import { BaseWsService } from "./base-ws.service";
 import { RoomService } from "./room.service";
+import { nanoid } from "nanoid";
 
 export class RoomWsService extends BaseWsService {
     private roomService: RoomService;
@@ -18,6 +19,12 @@ export class RoomWsService extends BaseWsService {
             try {
                 const { code } = req.params;
 
+                if (typeof code !== "string") {
+                    this.sendError(ws, "Code must be a string");
+                    ws.close();
+                    return;
+                }
+
                 const room = await this.roomService.getRoomByCode(code);
 
                 if (!room) {
@@ -26,7 +33,15 @@ export class RoomWsService extends BaseWsService {
                     return;
                 }
 
-                ws.on("message", async (msg) => {});
+                const peerId = nanoid(32);
+
+                ws.on("message", async (msg) => {
+                    const data: RoomMessage = JSON.parse(msg.toString());
+
+                    if (data.type === "join") {
+                        this.joinRoom(code, peerId, data.name, ws);
+                    }
+                });
 
                 ws.on("error", (e) => {
                     console.error(e);
@@ -39,5 +54,42 @@ export class RoomWsService extends BaseWsService {
                 ws.close();
             }
         };
+    }
+
+    private joinRoom(
+        code: string,
+        peerId: string,
+        name: string,
+        ws: WebSocket,
+    ) {
+        let participants = this.rooms.get(code);
+
+        if (!participants) {
+            participants = new Map<string, Participant>();
+            this.rooms.set(code, participants);
+        }
+
+        participants.forEach((participant) => {
+            participant.ws.send(
+                JSON.stringify({
+                    type: "new_participant",
+                    peerId,
+                    name,
+                }),
+            );
+        });
+
+        const existingParticipants = [...participants.values()].map(
+            ({ peerId, name }) => ({ peerId, name }),
+        );
+
+        ws.send(
+            JSON.stringify({
+                type: "existing_participants",
+                participants: existingParticipants,
+            }),
+        );
+
+        participants.set(peerId, { peerId, name, ws });
     }
 }

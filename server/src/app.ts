@@ -2,16 +2,16 @@ import cors from "cors";
 import express from "express";
 
 import { RoomRoutes } from "./routes/room.routes";
+import { RoomWsService } from "./services/room-ws.service";
 
 import { ErrorMiddleware } from "./middlewares/error.middleware";
 import expressWs from "express-ws";
-import { RoomWsService } from "./services/room-ws.service";
 
 export const setupApp = () => {
-    const { app, getWss } = expressWs(express());
+    const { app } = expressWs(express());
 
     const roomRoutes = new RoomRoutes();
-    const roomWsService = new RoomWsService(getWss());
+    const roomWsService = new RoomWsService();
 
     app.use(express.json());
 
