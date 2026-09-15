@@ -170,6 +170,7 @@ export class RoomWsService extends BaseWsService {
         participant.ws.send(
             JSON.stringify({
                 type: "offer",
+                fromPeerId,
                 offer,
             }),
         );
@@ -192,6 +193,7 @@ export class RoomWsService extends BaseWsService {
         participant.ws.send(
             JSON.stringify({
                 type: "answer",
+                fromPeerId,
                 answer,
             }),
         );
@@ -214,6 +216,7 @@ export class RoomWsService extends BaseWsService {
         participant.ws.send(
             JSON.stringify({
                 type: "ice_candidate",
+                fromPeerId,
                 candidate,
             }),
         );
