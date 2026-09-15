@@ -43,11 +43,30 @@ export class RoomWsService extends BaseWsService {
                     }
 
                     if (data.type === "offer") {
-                        this.handleOffer(code, data.targetPeerId, data.offer);
+                        this.handleOffer(
+                            code,
+                            data.targetPeerId,
+                            peerId,
+                            data.offer,
+                        );
                     }
 
                     if (data.type === "answer") {
-                        this.handleAnswer(code, data.targetPeerId, data.answer);
+                        this.handleAnswer(
+                            code,
+                            data.targetPeerId,
+                            peerId,
+                            data.answer,
+                        );
+                    }
+
+                    if (data.type === "ice_candidate") {
+                        this.handleIceCandidate(
+                            code,
+                            data.targetPeerId,
+                            peerId,
+                            data.candidate,
+                        );
                     }
                 });
 
@@ -137,6 +156,7 @@ export class RoomWsService extends BaseWsService {
     private handleOffer(
         code: string,
         targetPeerId: string,
+        fromPeerId: string,
         offer: RTCSessionDescriptionInit,
     ) {
         const participants = this.getParticipants(code);
@@ -158,6 +178,7 @@ export class RoomWsService extends BaseWsService {
     private handleAnswer(
         code: string,
         targetPeerId: string,
+        fromPeerId: string,
         answer: RTCSessionDescriptionInit,
     ) {
         const participants = this.getParticipants(code);
@@ -172,6 +193,28 @@ export class RoomWsService extends BaseWsService {
             JSON.stringify({
                 type: "answer",
                 answer,
+            }),
+        );
+    }
+
+    private handleIceCandidate(
+        code: string,
+        targetPeerId: string,
+        fromPeerId: string,
+        candidate: RTCIceCandidateInit,
+    ) {
+        const participants = this.getParticipants(code);
+
+        if (!participants) return;
+
+        const participant = participants.get(targetPeerId);
+
+        if (!participant) return;
+
+        participant.ws.send(
+            JSON.stringify({
+                type: "ice_candidate",
+                candidate,
             }),
         );
     }
