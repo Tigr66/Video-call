@@ -47,7 +47,9 @@ export class RoomWsService extends BaseWsService {
                     console.error(e);
                 });
 
-                ws.on("close", async () => {});
+                ws.on("close", async () => {
+                    this.leaveRoom(code, peerId);
+                });
             } catch (e) {
                 console.error(e);
                 this.sendError(ws, "Internal server error");
@@ -91,5 +93,30 @@ export class RoomWsService extends BaseWsService {
         );
 
         participants.set(peerId, { peerId, name, ws });
+    }
+
+    private leaveRoom(code: string, peerId: string) {
+        const participants = this.rooms.get(code);
+
+        if (!participants) return;
+
+        const participant = participants.get(peerId);
+
+        if (!participant) return;
+
+        participants.delete(peerId);
+
+        participants.forEach((p) => {
+            p.ws.send(
+                JSON.stringify({
+                    type: "participant_left",
+                    peerId,
+                }),
+            );
+        });
+
+        if (participants.size === 0) {
+            this.rooms.delete(code);
+        }
     }
 }
