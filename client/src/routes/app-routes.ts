@@ -1,4 +1,4 @@
 export const appRoutes = {
-    MAIN_PAGE: "/",
+    HOME_PAGE: "/",
     ROOM_PAGE: "/room/:code",
 } as const;
