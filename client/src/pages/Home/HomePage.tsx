@@ -1,9 +1,10 @@
 import { Divider } from "@/components/Divider";
 
 import useHomePage from "./hooks/useHomePage";
+import { Button } from "@/components/Button";
 
 const HomePage = () => {
-    const { code, setCode } = useHomePage();
+    const { code, handleSetCode, isLoading, isSending } = useHomePage();
 
     return (
         <div className="w-full h-screen flex flex-col gap-4">
@@ -25,20 +26,20 @@ const HomePage = () => {
                             id="room-code"
                             type="text"
                             value={code}
-                            onChange={(e) => setCode(e.target.value)}
+                            onChange={handleSetCode}
                             placeholder="Введите код комнаты"
                             className="rounded-lg border border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
-                        <button className="rounded-lg bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600 cursor-pointer">
+                        <Button loading={isLoading}>
                             Войти в комнату
-                        </button>
+                        </Button>
                     </div>
 
                     <Divider text="или" />
 
-                    <button className="rounded-lg bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-600 cursor-pointer">
+                    <Button loading={isSending}>
                         Создать комнату
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
