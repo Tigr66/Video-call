@@ -4,7 +4,14 @@ import useHomePage from "./hooks/useHomePage";
 import { Button } from "@/components/Button";
 
 const HomePage = () => {
-    const { code, handleSetCode, isLoading, isSending } = useHomePage();
+    const {
+        code,
+        handleSetCode,
+        handleCreateRoom,
+        handleJoinRoom,
+        isLoading,
+        isSending,
+    } = useHomePage();
 
     return (
         <div className="w-full h-screen flex flex-col gap-4">
@@ -30,14 +37,14 @@ const HomePage = () => {
                             placeholder="Введите код комнаты"
                             className="rounded-lg border border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
-                        <Button loading={isLoading}>
+                        <Button loading={isLoading} onClick={handleJoinRoom}>
                             Войти в комнату
                         </Button>
                     </div>
 
                     <Divider text="или" />
 
-                    <Button loading={isSending}>
+                    <Button loading={isSending} onClick={handleCreateRoom}>
                         Создать комнату
                     </Button>
                 </div>
