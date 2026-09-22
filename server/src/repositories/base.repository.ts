@@ -11,6 +11,7 @@ export abstract class BaseRepository {
     }
 
     protected handleError(e: unknown, message: string): never {
+        console.error(e);
         throw new InternalServerError(message);
     }
 }

@@ -6,7 +6,7 @@ export class RoomRepository extends BaseRepository {
         try {
             return await this.models.Room.create({ code });
         } catch (e) {
-            this.handleError(e, "Failed to create room");
+            this.handleError(e, "Ошибка при создании комнаты");
         }
     }
 
@@ -14,7 +14,7 @@ export class RoomRepository extends BaseRepository {
         try {
             return await this.models.Room.first({ code });
         } catch (e) {
-            this.handleError(e, `Failed to get room with code ${code}`);
+            this.handleError(e, `Ошибка при получении комнаты с кодом ${code}`);
         }
     }
 }
