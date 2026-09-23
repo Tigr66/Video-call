@@ -1,0 +1,1 @@
+export {default as JoinRoomModal} from "./JoinRoomModal";
