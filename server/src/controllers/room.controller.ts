@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { RoomService } from "../services/room.service";
+import { NotFoundError } from "../errors/not-found-error";
 
 export class RoomController {
     private roomService: RoomService;
@@ -26,6 +27,10 @@ export class RoomController {
             }
 
             const result = await this.roomService.getRoomByCode(code);
+
+            if (!result) {
+                throw new NotFoundError(`Комната с кодом ${code} не найдена`);
+            }
 
             res.status(200).json(result);
         } catch (err) {
