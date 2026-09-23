@@ -20,7 +20,7 @@ export class RoomWsService extends BaseWsService {
                 const { code } = req.params;
 
                 if (typeof code !== "string") {
-                    this.sendError(ws, "Code must be a string");
+                    this.sendError(ws, "Код должен быть строкой");
                     ws.close();
                     return;
                 }
@@ -28,7 +28,7 @@ export class RoomWsService extends BaseWsService {
                 const room = await this.roomService.getRoomByCode(code);
 
                 if (!room) {
-                    this.sendError(ws, "Room not found");
+                    this.sendError(ws, "Комната не найдена");
                     ws.close();
                     return;
                 }
@@ -79,7 +79,7 @@ export class RoomWsService extends BaseWsService {
                 });
             } catch (e) {
                 console.error(e);
-                this.sendError(ws, "Internal server error");
+                this.sendError(ws, "Внутренняя ошибка сервера");
                 ws.close();
             }
         };
@@ -99,7 +99,7 @@ export class RoomWsService extends BaseWsService {
         }
 
         if (participants.size >= 4) {
-            this.sendError(ws, "Room is full. Maximum 4 participants");
+            this.sendError(ws, "Комната заполнена. Максимум 4 участника");
             ws.close();
             return;
         }

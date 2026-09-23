@@ -23,7 +23,7 @@ export class RoomController {
             const { code } = req.params;
 
             if (typeof code !== "string") {
-                return res.status(400).json({ error: "Code must be a string" });
+                return res.status(400).json({ error: "Код должен быть строкой" });
             }
 
             const result = await this.roomService.getRoomByCode(code);
