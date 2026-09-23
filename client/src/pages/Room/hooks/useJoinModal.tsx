@@ -1,7 +1,10 @@
 import { notifyError } from "@/services/notify.service";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const useJoinModal = (onReady: (stream: MediaStream, name: string) => void) => {
+    const navigate = useNavigate();
+
     const [name, setName] = useState<string>("");
 
     const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +38,7 @@ const useJoinModal = (onReady: (stream: MediaStream, name: string) => void) => {
         handleSetName,
         handleJoinRoom,
         isJoinButtonDisabled,
+        navigate,
     };
 };
 
