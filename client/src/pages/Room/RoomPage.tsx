@@ -1,11 +1,19 @@
 import { useParams } from "react-router-dom";
 import { JoinRoomModal } from "./components";
 import useRoomPage from "./hooks/useRoomPage";
+import NotFoundRoom from "./components/NotFoundRoom";
 
 const RoomPage = () => {
     const { code } = useParams<{ code: string }>();
 
-    const { hasJoined, localStream, userName, onReady } = useRoomPage();
+    const {
+        hasJoined,
+        localStream,
+        userName,
+        onReady,
+        roomNotFound,
+        renderJoinModal,
+    } = useRoomPage(code);
 
     return (
         <div
@@ -14,7 +22,8 @@ const RoomPage = () => {
                 bg-size-[400%_400%]
                 animate-gradient"
         >
-            {!hasJoined && <JoinRoomModal onReady={onReady} />}
+            {renderJoinModal && <JoinRoomModal onReady={onReady} />}
+            {roomNotFound && <NotFoundRoom />}
         </div>
     );
 };
