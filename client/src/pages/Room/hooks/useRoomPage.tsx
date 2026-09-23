@@ -10,6 +10,7 @@ const useRoomPage = (code?: string) => {
     );
 
     const [hasJoined, setHasJoined] = useState<boolean>(false);
+    const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
 
@@ -21,13 +22,16 @@ const useRoomPage = (code?: string) => {
 
     useEffect(() => {
         if (code) {
-            dispatch(getRoomByCodeThunk(code));
+            dispatch(getRoomByCodeThunk(code)).finally(() => {
+                setHasCheckedRoom(true);
+            });
         }
     }, [dispatch, code]);
 
-    const roomNotFound = !isLoading && currentRoomCode !== code;
+    const roomNotFound =
+        hasCheckedRoom && !isLoading && currentRoomCode !== code;
 
-    const renderJoinModal = !hasJoined && !roomNotFound;
+    const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
     return {
         hasJoined,
@@ -36,6 +40,7 @@ const useRoomPage = (code?: string) => {
         onReady,
         roomNotFound,
         renderJoinModal,
+        isLoading,
     };
 };
 

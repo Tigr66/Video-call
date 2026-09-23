@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
-import { JoinRoomModal } from "./components";
+import { JoinRoomModal, NotFoundRoom } from "./components";
+import { LoaderCircle } from "lucide-react";
 import useRoomPage from "./hooks/useRoomPage";
-import NotFoundRoom from "./components/NotFoundRoom";
 
 const RoomPage = () => {
     const { code } = useParams<{ code: string }>();
@@ -13,6 +13,7 @@ const RoomPage = () => {
         onReady,
         roomNotFound,
         renderJoinModal,
+        isLoading,
     } = useRoomPage(code);
 
     return (
@@ -24,6 +25,12 @@ const RoomPage = () => {
         >
             {renderJoinModal && <JoinRoomModal onReady={onReady} />}
             {roomNotFound && <NotFoundRoom />}
+            {isLoading && (
+                <div className="flex flex-col items-center justify-center min-h-screen gap-1">
+                    <LoaderCircle className="h-16 w-16 animate-spin text-white" />
+                    <h2 className="text-white text-xl">Загрузка комнаты...</h2>
+                </div>
+            )}
         </div>
     );
 };
