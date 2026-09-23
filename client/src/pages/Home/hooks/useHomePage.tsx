@@ -13,7 +13,7 @@ const useHomePage = () => {
     const { isLoading, isSending } = useAppSelector((state) => state.room);
 
     const handleSetCode = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCode(event.target.value);
+        if (event.target.value.length <= 6) setCode(event.target.value);
     };
 
     const handleCreateRoom = async () => {
@@ -26,7 +26,17 @@ const useHomePage = () => {
         navigate(appRoutes.ROOM_PAGE.replace(":code", code));
     };
 
-    return { code, handleSetCode, handleCreateRoom, handleJoinRoom, isLoading, isSending };
+    const isJoinButtonDisabled = code.length !== 6 || isSending;
+
+    return {
+        code,
+        handleSetCode,
+        handleCreateRoom,
+        handleJoinRoom,
+        isLoading,
+        isSending,
+        isJoinButtonDisabled,
+    };
 };
 
 export default useHomePage;

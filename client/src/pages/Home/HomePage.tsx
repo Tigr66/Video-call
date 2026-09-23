@@ -9,8 +9,8 @@ const HomePage = () => {
         handleSetCode,
         handleCreateRoom,
         handleJoinRoom,
-        isLoading,
         isSending,
+        isJoinButtonDisabled,
     } = useHomePage();
 
     return (
@@ -37,7 +37,10 @@ const HomePage = () => {
                             placeholder="Введите код комнаты"
                             className="rounded-lg border border-slate-300 px-4 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
-                        <Button loading={isLoading} onClick={handleJoinRoom}>
+                        <Button
+                            onClick={handleJoinRoom}
+                            disabled={isJoinButtonDisabled}
+                        >
                             Войти в комнату
                         </Button>
                     </div>
