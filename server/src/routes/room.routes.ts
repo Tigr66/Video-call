@@ -14,6 +14,6 @@ export class RoomRoutes {
     private initRoutes() {
         this.router.post("/", this.roomController.create);
 
-        this.router.get("/rooms/:code", this.roomController.getRoomByCode);
+        this.router.get("/:code", this.roomController.getRoomByCode);
     }
 }
