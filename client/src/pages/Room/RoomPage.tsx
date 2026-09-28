@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { JoinRoomModal, NotFoundRoom } from "./components";
+import { JoinRoomModal, NotFoundRoom, Video } from "./components";
 import { LoaderCircle } from "lucide-react";
 import useRoomPage from "./hooks/useRoomPage";
 
@@ -31,6 +31,12 @@ const RoomPage = () => {
                     <h2 className="text-white text-xl">Загрузка комнаты...</h2>
                 </div>
             )}
+
+            <div>
+                {localStream && (
+                    <Video stream={localStream} name={userName} muted />
+                )}
+            </div>
         </div>
     );
 };

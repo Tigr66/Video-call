@@ -3,7 +3,7 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const useRoomPage = (code?: string) => {
     const dispatch = useAppDispatch();
@@ -18,10 +18,34 @@ const useRoomPage = (code?: string) => {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [participants, setParticipants] = useState<Participant[]>([]);
 
+    const peerConnections = useRef(new Map<string, RTCPeerConnection>());
+
+    const createPeerConnection = (peerId: string) => {
+        const pc = new RTCPeerConnection();
+
+        peerConnections.current.set(peerId, pc);
+
+        return pc;
+    };
+
     const onReady = (stream: MediaStream, name: string) => {
         setLocalStream(stream);
         setUserName(name);
         setHasJoined(true);
+    };
+
+    const createOffer = async (peerId: string) => {
+        const pc = createPeerConnection(peerId);
+
+        localStream?.getTracks().forEach((track) => {
+            pc.addTrack(track, localStream);
+        });
+
+        const offer = await pc.createOffer();
+
+        await pc.setLocalDescription(offer);
+
+        return offer;
     };
 
     useEffect(() => {
@@ -46,7 +70,7 @@ const useRoomPage = (code?: string) => {
             );
         };
 
-        socket.onmessage = (event) => {
+        socket.onmessage = async (event) => {
             const data: RoomWsMessage = JSON.parse(event.data);
 
             if (data.type === "error") {
@@ -55,6 +79,18 @@ const useRoomPage = (code?: string) => {
 
             if (data.type === "existing_participants") {
                 setParticipants(data.participants);
+
+                for (const participant of data.participants) {
+                    const offer = await createOffer(participant.peerId);
+
+                    socket.send(
+                        JSON.stringify({
+                            type: "offer",
+                            targetPeerId: participant.peerId,
+                            offer: offer,
+                        }),
+                    );
+                }
             }
 
             if (data.type === "new_participant") {
