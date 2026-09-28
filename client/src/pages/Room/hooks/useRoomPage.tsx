@@ -1,5 +1,5 @@
 import { WS_URL } from "@/api/video-call-api";
-import { notifyError } from "@/services/notify.service";
+import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
@@ -62,12 +62,16 @@ const useRoomPage = (code?: string) => {
                     ...prev,
                     { peerId: data.peerId, name: data.name },
                 ]);
+
+                notifyInfo(`${data.name} присоединился к комнате`);
             }
 
             if (data.type === "participant_left") {
                 setParticipants((prev) =>
                     prev.filter((p) => p.peerId !== data.peerId),
                 );
+
+                notifyInfo(`${data.name} покинул комнату`);
             }
         };
 

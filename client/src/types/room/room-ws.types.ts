@@ -17,6 +17,7 @@ export interface NewParticipantMessage {
 export interface ParticipantLeftMessage {
     type: "participant_left";
     peerId: string;
+    name: string;
 }
 
 export interface OfferMessage {
