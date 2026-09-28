@@ -16,6 +16,9 @@ const useRoomPage = (code?: string) => {
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [remoteStreams, setRemoteStreams] = useState<
+        Map<string, MediaStream>
+    >(new Map());
     const [participants, setParticipants] = useState<Participant[]>([]);
 
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
@@ -37,6 +40,18 @@ const useRoomPage = (code?: string) => {
                     }),
                 );
             }
+        };
+
+        pc.ontrack = (event) => {
+            const stream = event.streams[0];
+
+            setRemoteStreams((prev) => {
+                const next = new Map(prev);
+
+                next.set(peerId, stream);
+
+                return next;
+            });
         };
 
         peerConnections.current.set(peerId, pc);
@@ -175,6 +190,8 @@ const useRoomPage = (code?: string) => {
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
     return {
+        remoteStreams,
+        participants,
         hasJoined,
         localStream,
         userName,

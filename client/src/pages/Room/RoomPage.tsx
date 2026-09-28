@@ -7,7 +7,8 @@ const RoomPage = () => {
     const { code } = useParams<{ code: string }>();
 
     const {
-        hasJoined,
+        participants,
+        remoteStreams,
         localStream,
         userName,
         onReady,
@@ -36,6 +37,13 @@ const RoomPage = () => {
                 {localStream && (
                     <Video stream={localStream} name={userName} muted />
                 )}
+                {participants.map((participant) => (
+                    <Video
+                        key={participant.peerId}
+                        stream={remoteStreams.get(participant.peerId)!}
+                        name={participant.name}
+                    />
+                ))}
             </div>
         </div>
     );
