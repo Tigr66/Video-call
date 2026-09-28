@@ -1,3 +1,5 @@
+import { WS_URL } from "@/api/video-call-api";
+import { notifyError } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import { useEffect, useState } from "react";
@@ -27,6 +29,33 @@ const useRoomPage = (code?: string) => {
             });
         }
     }, [dispatch, code]);
+
+    useEffect(() => {
+        if (!hasJoined || !code) return;
+
+        const socket = new WebSocket(`${WS_URL}/rooms/${code}`);
+
+        socket.onopen = () => {
+            socket.send(
+                JSON.stringify({
+                    type: "join",
+                    name: userName,
+                }),
+            );
+        };
+
+        socket.onmessage = (event) => {
+            console.log("Message:", event.data);
+        };
+
+        socket.onerror = () => {
+            notifyError("Ошибка соединения с сервером");
+        };
+
+        return () => {
+            socket.close();
+        };
+    }, [hasJoined, code]);
 
     const roomNotFound =
         hasCheckedRoom && !isLoading && currentRoomCode !== code;
