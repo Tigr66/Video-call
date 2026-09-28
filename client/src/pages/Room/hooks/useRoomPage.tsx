@@ -2,6 +2,7 @@ import { WS_URL } from "@/api/video-call-api";
 import { notifyError } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
+import type { Participant } from "@/types/room/room.types";
 import { useEffect, useState } from "react";
 
 const useRoomPage = (code?: string) => {
@@ -15,6 +16,7 @@ const useRoomPage = (code?: string) => {
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [participants, setParticipants] = useState<Participant[]>([]);
 
     const onReady = (stream: MediaStream, name: string) => {
         setLocalStream(stream);

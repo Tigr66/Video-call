@@ -1,6 +1,6 @@
 import { videoCallApi } from "@/api/video-call-api";
 import { notifyError } from "@/services/notify.service";
-import type { RoomFetchResponse } from "@/types/room-fetch.types";
+import type { RoomFetchResponse } from "@/types/room/room-fetch.types";
 import { getApiError } from "@/utils/get-api-error";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 

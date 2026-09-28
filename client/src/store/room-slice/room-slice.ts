@@ -1,4 +1,4 @@
-import type { IRoomState } from "@/types/room-state.types";
+import type { IRoomState } from "@/types/room/room-state.types";
 import { createSlice } from "@reduxjs/toolkit";
 import { addRoomThunk, getRoomByCodeThunk } from "./room-thunks";
 
