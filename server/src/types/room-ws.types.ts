@@ -1,28 +1,33 @@
 import WebSocket from "ws";
 
-export type Participant = {
+export interface Participant {
     peerId: string;
     name: string;
     ws: WebSocket;
-};
+}
+
+export interface JoinMessage {
+    type: "join";
+    name: string;
+}
+
+export interface OfferMessage {
+    type: "offer";
+    targetPeerId: string;
+    offer: RTCSessionDescriptionInit;
+}
+
+export interface AnswerMessage {
+    type: "answer";
+    targetPeerId: string;
+    answer: RTCSessionDescriptionInit;
+}
+
+export interface IceCandidateMessage {
+    type: "ice_candidate";
+    targetPeerId: string;
+    candidate: RTCIceCandidateInit;
+}
 
 export type RoomMessage =
-    | {
-          type: "join";
-          name: string;
-      }
-    | {
-          type: "offer";
-          targetPeerId: string;
-          offer: RTCSessionDescriptionInit;
-      }
-    | {
-          type: "answer";
-          targetPeerId: string;
-          answer: RTCSessionDescriptionInit;
-      }
-    | {
-          type: "ice_candidate";
-          targetPeerId: string;
-          candidate: RTCIceCandidateInit;
-      };
+    JoinMessage | OfferMessage | AnswerMessage | IceCandidateMessage;
