@@ -75,10 +75,10 @@ const useRoomPage = (code?: string) => {
     useEffect(() => {
         if (!hasJoined || !code) return;
 
-        const socket = new WebSocket(`${WS_URL}/rooms/${code}`);
+        socket.current = new WebSocket(`${WS_URL}/rooms/${code}`);
 
-        socket.onopen = () => {
-            socket.send(
+        socket.current.onopen = () => {
+            socket.current?.send(
                 JSON.stringify({
                     type: "join",
                     name: userName,
@@ -86,7 +86,7 @@ const useRoomPage = (code?: string) => {
             );
         };
 
-        socket.onmessage = async (event) => {
+        socket.current.onmessage = async (event) => {
             const data: RoomWsMessage = JSON.parse(event.data);
 
             if (data.type === "error") {
@@ -99,7 +99,7 @@ const useRoomPage = (code?: string) => {
                 for (const participant of data.participants) {
                     const offer = await createOffer(participant.peerId);
 
-                    socket.send(
+                    socket.current?.send(
                         JSON.stringify({
                             type: "offer",
                             targetPeerId: participant.peerId,
@@ -138,7 +138,7 @@ const useRoomPage = (code?: string) => {
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
 
-                socket.send(
+                socket.current?.send(
                     JSON.stringify({
                         type: "answer",
                         targetPeerId: data.fromPeerId,
@@ -160,12 +160,12 @@ const useRoomPage = (code?: string) => {
             }
         };
 
-        socket.onerror = () => {
+        socket.current.onerror = () => {
             notifyError("Ошибка соединения с сервером");
         };
 
         return () => {
-            socket.close();
+            socket.current?.close();
         };
     }, [hasJoined, code]);
 
