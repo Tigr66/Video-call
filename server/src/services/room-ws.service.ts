@@ -119,6 +119,7 @@ export class RoomWsService extends BaseWsService {
                 JSON.stringify({
                     type: "participant_left",
                     peerId,
+                    name: participant.name,
                 }),
             );
         });
