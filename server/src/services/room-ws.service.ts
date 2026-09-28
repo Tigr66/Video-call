@@ -25,50 +25,25 @@ export class RoomWsService extends BaseWsService {
                     return;
                 }
 
-                const room = await this.roomService.getRoomByCode(code);
+                const roomPromise = this.roomService.getRoomByCode(code);
+
+                const peerId = nanoid(32);
+
+                ws.on("message", async (msg) => {
+                    const room = await roomPromise;
+
+                    if (!room || ws.readyState !== WebSocket.OPEN) return;
+
+                    await this.handleMessage(code, peerId, ws, msg);
+                });
+
+                const room = await roomPromise;
 
                 if (!room) {
                     this.sendError(ws, "Комната не найдена");
                     ws.close();
                     return;
                 }
-
-                const peerId = nanoid(32);
-
-                ws.on("message", async (msg) => {
-                    const data: RoomMessage = JSON.parse(msg.toString());
-
-                    if (data.type === "join") {
-                        this.joinRoom(code, peerId, data.name, ws);
-                    }
-
-                    if (data.type === "offer") {
-                        this.handleOffer(
-                            code,
-                            data.targetPeerId,
-                            peerId,
-                            data.offer,
-                        );
-                    }
-
-                    if (data.type === "answer") {
-                        this.handleAnswer(
-                            code,
-                            data.targetPeerId,
-                            peerId,
-                            data.answer,
-                        );
-                    }
-
-                    if (data.type === "ice_candidate") {
-                        this.handleIceCandidate(
-                            code,
-                            data.targetPeerId,
-                            peerId,
-                            data.candidate,
-                        );
-                    }
-                });
 
                 ws.on("error", (e) => {
                     console.error(e);
@@ -150,6 +125,43 @@ export class RoomWsService extends BaseWsService {
 
         if (participants.size === 0) {
             this.rooms.delete(code);
+        }
+    }
+
+    private async handleMessage(
+        code: string,
+        peerId: string,
+        ws: WebSocket,
+        msg: WebSocket.RawData,
+    ) {
+        try {
+            const data: RoomMessage = JSON.parse(msg.toString());
+
+            if (data.type === "join") {
+                this.joinRoom(code, peerId, data.name, ws);
+            }
+
+            if (data.type === "offer") {
+                this.handleOffer(code, data.targetPeerId, peerId, data.offer);
+            }
+
+            if (data.type === "answer") {
+                this.handleAnswer(code, data.targetPeerId, peerId, data.answer);
+            }
+
+            if (data.type === "ice_candidate") {
+                this.handleIceCandidate(
+                    code,
+                    data.targetPeerId,
+                    peerId,
+                    data.candidate,
+                );
+            }
+        } catch (e) {
+            console.error("Ошибка:", e);
+            if (ws.readyState === WebSocket.OPEN) {
+                this.sendError(ws, "Не удалось обработать сообщение");
+            }
         }
     }
 
