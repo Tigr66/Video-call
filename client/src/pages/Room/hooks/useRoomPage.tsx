@@ -1,4 +1,4 @@
-import { WS_URL } from "@/api/video-call-api";
+import { ICE_SERVERS, WS_URL } from "@/api/video-call-api";
 import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
@@ -20,8 +20,24 @@ const useRoomPage = (code?: string) => {
 
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
 
+    const socket = useRef<WebSocket | null>(null);
+
     const createPeerConnection = (peerId: string) => {
-        const pc = new RTCPeerConnection();
+        const pc = new RTCPeerConnection({
+            iceServers: ICE_SERVERS,
+        });
+
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.current?.send(
+                    JSON.stringify({
+                        type: "ice_candidate",
+                        targetPeerId: peerId,
+                        candidate: event.candidate,
+                    }),
+                );
+            }
+        };
 
         peerConnections.current.set(peerId, pc);
 
@@ -108,6 +124,39 @@ const useRoomPage = (code?: string) => {
                 );
 
                 notifyInfo(`${data.name} покинул комнату`);
+            }
+
+            if (data.type === "offer") {
+                const pc = createPeerConnection(data.fromPeerId);
+
+                localStream?.getTracks().forEach((track) => {
+                    pc.addTrack(track, localStream);
+                });
+
+                await pc.setRemoteDescription(data.offer);
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+
+                socket.send(
+                    JSON.stringify({
+                        type: "answer",
+                        targetPeerId: data.fromPeerId,
+                        answer: answer,
+                    }),
+                );
+            }
+
+            if (data.type === "answer") {
+                const pc = peerConnections.current.get(data.fromPeerId);
+
+                if (pc) await pc.setRemoteDescription(data.answer);
+            }
+
+            if (data.type === "ice_candidate") {
+                const pc = peerConnections.current.get(data.fromPeerId);
+
+                if (pc) await pc.addIceCandidate(data.candidate);
             }
         };
 
