@@ -1,4 +1,7 @@
-import type { Participant } from "./room.types";
+export type Participant = {
+    peerId: string;
+    name: string;
+};
 
 export interface ExistingParticipantsMessage {
     type: "existing_participants";

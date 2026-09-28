@@ -2,7 +2,7 @@ import { WS_URL } from "@/api/video-call-api";
 import { notifyError } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
-import type { Participant } from "@/types/room/room.types";
+import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
 import { useEffect, useState } from "react";
 
 const useRoomPage = (code?: string) => {
@@ -47,7 +47,28 @@ const useRoomPage = (code?: string) => {
         };
 
         socket.onmessage = (event) => {
-            console.log("Message:", event.data);
+            const data: RoomWsMessage = JSON.parse(event.data);
+
+            if (data.type === "error") {
+                notifyError(data.message);
+            }
+
+            if (data.type === "existing_participants") {
+                setParticipants(data.participants);
+            }
+
+            if (data.type === "new_participant") {
+                setParticipants((prev) => [
+                    ...prev,
+                    { peerId: data.peerId, name: data.name },
+                ]);
+            }
+
+            if (data.type === "participant_left") {
+                setParticipants((prev) =>
+                    prev.filter((p) => p.peerId !== data.peerId),
+                );
+            }
         };
 
         socket.onerror = () => {
