@@ -79,6 +79,21 @@ const useRoomPage = (code?: string) => {
         return offer;
     };
 
+    const cleanUp = () => {
+        socket.current?.close();
+
+        peerConnections.current.forEach((pc) => pc.close());
+
+        localStream?.getTracks().forEach((track) => {
+            track.stop();
+        });
+
+        peerConnections.current.clear();
+
+        setRemoteStreams(new Map());
+        setParticipants([]);
+    };
+
     useEffect(() => {
         if (code) {
             dispatch(getRoomByCodeThunk(code)).finally(() => {
@@ -134,6 +149,9 @@ const useRoomPage = (code?: string) => {
             }
 
             if (data.type === "participant_left") {
+                peerConnections.current.get(data.peerId)?.close();
+                peerConnections.current.delete(data.peerId);
+
                 setParticipants((prev) =>
                     prev.filter((p) => p.peerId !== data.peerId),
                 );
@@ -180,9 +198,9 @@ const useRoomPage = (code?: string) => {
         };
 
         return () => {
-            socket.current?.close();
+            cleanUp();
         };
-    }, [hasJoined, code]);
+    }, [hasJoined, code, cleanUp]);
 
     const roomNotFound =
         hasCheckedRoom && !isLoading && currentRoomCode !== code;
