@@ -1,6 +1,6 @@
 import { setupApp } from "./app";
 
-const PORT = 8000;
+const PORT = Number(process.env.PORT) || 8000;
 
 const bootstrap = async () => {
     const app = setupApp();

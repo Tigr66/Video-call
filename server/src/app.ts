@@ -7,6 +7,8 @@ import { RoomWsService } from "./services/room-ws.service";
 import { ErrorMiddleware } from "./middlewares/error.middleware";
 import expressWs from "express-ws";
 
+const clientUrl = process.env.CLIENT_URL ?? "http://localhost:5173";
+
 export const setupApp = () => {
     const { app } = expressWs(express());
 
@@ -17,7 +19,7 @@ export const setupApp = () => {
 
     app.use(
         cors({
-            origin: "http://localhost:5173",
+            origin: [clientUrl],
             credentials: true,
         }),
     );
