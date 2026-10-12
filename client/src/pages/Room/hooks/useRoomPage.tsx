@@ -3,7 +3,10 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const errorMessage =
+    "Ошибка соединения с участником комнаты, попробуйте перезагрузить страницу";
 
 const useRoomPage = (code?: string) => {
     const dispatch = useAppDispatch();
@@ -25,7 +28,11 @@ const useRoomPage = (code?: string) => {
 
     const socket = useRef<WebSocket | null>(null);
 
-    const createPeerConnection = (peerId: string) => {
+    const createPeerConnection = (peerId: string): RTCPeerConnection => {
+        const existing = peerConnections.current.get(peerId);
+
+        if (existing) return existing;
+
         const pc = new RTCPeerConnection({
             iceServers: ICE_SERVERS,
         });
@@ -65,34 +72,39 @@ const useRoomPage = (code?: string) => {
         setHasJoined(true);
     };
 
-    const createOffer = async (peerId: string) => {
-        const pc = createPeerConnection(peerId);
+    const createOffer = async (
+        peerId: string,
+    ): Promise<RTCSessionDescriptionInit | null> => {
+        try {
+            const pc = createPeerConnection(peerId);
 
-        localStream?.getTracks().forEach((track) => {
-            pc.addTrack(track, localStream);
-        });
+            localStream?.getTracks().forEach((track) => {
+                pc.addTrack(track, localStream);
+            });
 
-        const offer = await pc.createOffer();
+            const offer = await pc.createOffer();
 
-        await pc.setLocalDescription(offer);
+            await pc.setLocalDescription(offer);
 
-        return offer;
+            return offer;
+        } catch (error) {
+            notifyError(errorMessage);
+            return null;
+        }
     };
 
-    const cleanUp = () => {
+    const cleanUp = useCallback(() => {
         socket.current?.close();
+        socket.current = null;
 
         peerConnections.current.forEach((pc) => pc.close());
-
-        localStream?.getTracks().forEach((track) => {
-            track.stop();
-        });
-
         peerConnections.current.clear();
+
+        localStream?.getTracks().forEach((track) => track.stop());
 
         setRemoteStreams(new Map());
         setParticipants([]);
-    };
+    }, [localStream]);
 
     useEffect(() => {
         if (code) {
@@ -129,6 +141,8 @@ const useRoomPage = (code?: string) => {
                 for (const participant of data.participants) {
                     const offer = await createOffer(participant.peerId);
 
+                    if (!offer) continue;
+
                     socket.current?.send(
                         JSON.stringify({
                             type: "offer",
@@ -156,17 +170,28 @@ const useRoomPage = (code?: string) => {
                     prev.filter((p) => p.peerId !== data.peerId),
                 );
 
+                setRemoteStreams((prev) => {
+                    const next = new Map(prev);
+                    next.delete(data.peerId);
+                    return next;
+                });
+
                 notifyInfo(`${data.name} покинул комнату`);
             }
 
             if (data.type === "offer") {
                 const pc = createPeerConnection(data.fromPeerId);
 
-                localStream?.getTracks().forEach((track) => {
-                    pc.addTrack(track, localStream);
-                });
+                try {
+                    localStream?.getTracks().forEach((track) => {
+                        pc.addTrack(track, localStream);
+                    });
 
-                await pc.setRemoteDescription(data.offer);
+                    await pc.setRemoteDescription(data.offer);
+                } catch (error) {
+                    notifyError(errorMessage);
+                    return;
+                }
 
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
