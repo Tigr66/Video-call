@@ -189,8 +189,6 @@ const useRoomPage = (code?: string) => {
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
-    const totalParticipants = participants.length + (localStream ? 1 : 0);
-
     return {
         remoteStreams,
         participants,
@@ -201,7 +199,6 @@ const useRoomPage = (code?: string) => {
         roomNotFound,
         renderJoinModal,
         isLoading,
-        totalParticipants,
     };
 };
 
