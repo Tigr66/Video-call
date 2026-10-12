@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { JoinRoomModal, NotFoundRoom, Video } from "./components";
 import { LoaderCircle } from "lucide-react";
 import useRoomPage from "./hooks/useRoomPage";
+import "./styles.css";
 
 const RoomPage = () => {
     const { code } = useParams<{ code: string }>();
@@ -15,6 +16,7 @@ const RoomPage = () => {
         roomNotFound,
         renderJoinModal,
         isLoading,
+        totalParticipants,
     } = useRoomPage(code);
 
     return (
@@ -33,7 +35,7 @@ const RoomPage = () => {
                 </div>
             )}
 
-            <div>
+            <div className="video-grid" data-count={totalParticipants}>
                 {localStream && (
                     <Video stream={localStream} name={userName} muted />
                 )}
