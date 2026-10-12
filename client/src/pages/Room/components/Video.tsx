@@ -19,7 +19,7 @@ const Video = ({ stream, name, muted = false }: VideoProps) => {
                 className="h-full w-full object-contain"
             />
 
-            <span className="absolute bottom-2 left-2 text-white text-lg font-bold">
+            <span className="absolute bottom-2 left-2 rounded-md bg-black/50 px-2 py-1 text-sm font-bold text-white">
                 {name}
             </span>
         </div>
