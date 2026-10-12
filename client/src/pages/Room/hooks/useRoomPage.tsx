@@ -1,15 +1,18 @@
 import { ICE_SERVERS, WS_URL } from "@/api/video-call-api";
+import { appRoutes } from "@/routes/app-routes";
 import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const errorMessage =
     "Ошибка соединения с участником комнаты, попробуйте перезагрузить страницу";
 
 const useRoomPage = (code?: string) => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const { currentRoomCode, isLoading } = useAppSelector(
         (state) => state.room,
@@ -105,6 +108,13 @@ const useRoomPage = (code?: string) => {
         setRemoteStreams(new Map());
         setParticipants([]);
     }, [localStream]);
+
+    const endCall = () => {
+        cleanUp();
+        setHasJoined(false);
+        setLocalStream(null);
+        navigate(appRoutes.HOME_PAGE);
+    };
 
     useEffect(() => {
         if (code) {
@@ -242,6 +252,7 @@ const useRoomPage = (code?: string) => {
         roomNotFound,
         renderJoinModal,
         isLoading,
+        endCall,
     };
 };
 
