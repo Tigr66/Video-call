@@ -44,7 +44,7 @@ const RoomPage = () => {
 
             <div className="video-grid" data-count={displayedParticipantCount}>
                 {localStream && (
-                    <Video stream={localStream} name={userName} muted />
+                    <Video stream={localStream} name={userName} muted mirrored />
                 )}
                 {remoteVideos.map(({ participant, stream }) => (
                     <Video
