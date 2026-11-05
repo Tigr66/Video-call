@@ -3,7 +3,11 @@ import { appRoutes } from "@/routes/app-routes";
 import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
-import type { Participant, RoomWsMessage } from "@/types/room/room-ws.types";
+import type {
+    JoinMessage,
+    Participant,
+    RoomWsMessage,
+} from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -21,99 +25,92 @@ const useRoomPage = (code?: string) => {
     const [hasJoined, setHasJoined] = useState<boolean>(false);
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
-    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-    const [remoteStreams, setRemoteStreams] = useState<
-        Map<string, MediaStream>
-    >(new Map());
     const [participants, setParticipants] = useState<Participant[]>([]);
 
+    const localStream = useRef<MediaStream | null>(null);
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
-
     const socket = useRef<WebSocket | null>(null);
 
-    const createPeerConnection = (peerId: string): RTCPeerConnection => {
-        const existing = peerConnections.current.get(peerId);
+    const createPeerConnection = (toPeerId: string) => {
+        const existingConnection = peerConnections.current.get(toPeerId);
 
-        if (existing) return existing;
+        if (existingConnection) {
+            return existingConnection;
+        }
 
-        const pc = new RTCPeerConnection({
+        const peerConnection = new RTCPeerConnection({
             iceServers: ICE_SERVERS,
         });
 
-        pc.onicecandidate = (event) => {
+        peerConnections.current.set(toPeerId, peerConnection);
+
+        peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.current?.send(
-                    JSON.stringify({
-                        type: "ice_candidate",
-                        targetPeerId: peerId,
-                        candidate: event.candidate,
-                    }),
-                );
             }
         };
 
-        pc.ontrack = (event) => {
-            const stream = event.streams[0];
-
-            setRemoteStreams((prev) => {
-                const next = new Map(prev);
-
-                next.set(peerId, stream);
-
-                return next;
-            });
-        };
-
-        peerConnections.current.set(peerId, pc);
-
-        return pc;
+        return peerConnection;
     };
 
     const onReady = (stream: MediaStream, name: string) => {
-        setLocalStream(stream);
+        localStream.current = stream;
         setUserName(name);
         setHasJoined(true);
     };
 
-    const createOffer = async (
-        peerId: string,
-    ): Promise<RTCSessionDescriptionInit | null> => {
-        try {
-            const pc = createPeerConnection(peerId);
-
-            localStream?.getTracks().forEach((track) => {
-                pc.addTrack(track, localStream);
-            });
-
-            const offer = await pc.createOffer();
-
-            await pc.setLocalDescription(offer);
-
-            return offer;
-        } catch (error) {
-            notifyError(errorMessage);
-            return null;
-        }
-    };
-
-    const cleanUp = useCallback(() => {
-        socket.current?.close();
-        socket.current = null;
-
-        peerConnections.current.forEach((pc) => pc.close());
-        peerConnections.current.clear();
-
-        localStream?.getTracks().forEach((track) => track.stop());
-
-        setRemoteStreams(new Map());
-        setParticipants([]);
-    }, [localStream]);
+    const cleanUp = useCallback(() => {}, [localStream]);
 
     const endCall = () => {
         cleanUp();
         setHasJoined(false);
-        setLocalStream(null);
+        localStream.current = null;
         navigate(appRoutes.HOME_PAGE);
+    };
+
+    const onOpenSocket = () => {
+        const joinMessage: JoinMessage = {
+            type: "join",
+            name: userName,
+        };
+
+        socket.current?.send(JSON.stringify(joinMessage));
+    };
+
+    const onSocketMessage = async (event: MessageEvent) => {
+        const data: RoomWsMessage = JSON.parse(event.data);
+
+        if (data.type === "error") {
+            notifyError(data.message);
+        }
+
+        if (data.type === "existing_participants") {
+        }
+
+        if (data.type === "new_participant") {
+            setParticipants((prev) => [
+                ...prev,
+                { peerId: data.peerId, name: data.name },
+            ]);
+
+            notifyInfo(`${data.name} присоединился к комнате`);
+        }
+
+        if (data.type === "participant_left") {
+            notifyInfo(`${data.name} покинул комнату`);
+        }
+
+        if (data.type === "offer") {
+        }
+
+        if (data.type === "answer") {
+        }
+
+        if (data.type === "ice_candidate") {
+        }
+    };
+
+    const onErrorSocket = () => {
+        notifyError("Ошибка соединения с сервером");
     };
 
     useEffect(() => {
@@ -129,108 +126,11 @@ const useRoomPage = (code?: string) => {
 
         socket.current = new WebSocket(`${WS_URL}/rooms/${code}`);
 
-        socket.current.onopen = () => {
-            socket.current?.send(
-                JSON.stringify({
-                    type: "join",
-                    name: userName,
-                }),
-            );
-        };
+        socket.current.onopen = onOpenSocket;
 
-        socket.current.onmessage = async (event) => {
-            const data: RoomWsMessage = JSON.parse(event.data);
+        socket.current.onmessage = onSocketMessage;
 
-            if (data.type === "error") {
-                notifyError(data.message);
-            }
-
-            if (data.type === "existing_participants") {
-                setParticipants(data.participants);
-
-                for (const participant of data.participants) {
-                    const offer = await createOffer(participant.peerId);
-
-                    if (!offer) continue;
-
-                    socket.current?.send(
-                        JSON.stringify({
-                            type: "offer",
-                            targetPeerId: participant.peerId,
-                            offer: offer,
-                        }),
-                    );
-                }
-            }
-
-            if (data.type === "new_participant") {
-                setParticipants((prev) => [
-                    ...prev,
-                    { peerId: data.peerId, name: data.name },
-                ]);
-
-                notifyInfo(`${data.name} присоединился к комнате`);
-            }
-
-            if (data.type === "participant_left") {
-                peerConnections.current.get(data.peerId)?.close();
-                peerConnections.current.delete(data.peerId);
-
-                setParticipants((prev) =>
-                    prev.filter((p) => p.peerId !== data.peerId),
-                );
-
-                setRemoteStreams((prev) => {
-                    const next = new Map(prev);
-                    next.delete(data.peerId);
-                    return next;
-                });
-
-                notifyInfo(`${data.name} покинул комнату`);
-            }
-
-            if (data.type === "offer") {
-                const pc = createPeerConnection(data.fromPeerId);
-
-                try {
-                    localStream?.getTracks().forEach((track) => {
-                        pc.addTrack(track, localStream);
-                    });
-
-                    await pc.setRemoteDescription(data.offer);
-                } catch (error) {
-                    notifyError(errorMessage);
-                    return;
-                }
-
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-
-                socket.current?.send(
-                    JSON.stringify({
-                        type: "answer",
-                        targetPeerId: data.fromPeerId,
-                        answer: answer,
-                    }),
-                );
-            }
-
-            if (data.type === "answer") {
-                const pc = peerConnections.current.get(data.fromPeerId);
-
-                if (pc) await pc.setRemoteDescription(data.answer);
-            }
-
-            if (data.type === "ice_candidate") {
-                const pc = peerConnections.current.get(data.fromPeerId);
-
-                if (pc) await pc.addIceCandidate(data.candidate);
-            }
-        };
-
-        socket.current.onerror = () => {
-            notifyError("Ошибка соединения с сервером");
-        };
+        socket.current.onerror = onErrorSocket;
 
         return () => {
             cleanUp();
