@@ -1,6 +1,7 @@
 export type Participant = {
     peerId: string;
     name: string;
+    stream?: MediaStream | null;
 };
 
 export interface ExistingParticipantsMessage {
@@ -51,3 +52,26 @@ export type RoomWsMessage =
     | AnswerMessage
     | IceCandidateMessage
     | ErrorMessage;
+
+export interface JoinMessage {
+    type: "join";
+    name: string;
+}
+
+export interface OfferOutgoingMessage {
+    type: "offer";
+    targetPeerId: string;
+    offer: RTCSessionDescriptionInit;
+}
+
+export interface AnswerOutgoingMessage {
+    type: "answer";
+    targetPeerId: string;
+    answer: RTCSessionDescriptionInit;
+}
+
+export interface IceCandidateOutgoingMessage {
+    type: "ice_candidate";
+    targetPeerId: string;
+    candidate: RTCIceCandidateInit;
+}
