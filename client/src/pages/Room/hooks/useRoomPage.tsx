@@ -32,7 +32,7 @@ const useRoomPage = (code?: string) => {
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
     const socket = useRef<WebSocket | null>(null);
 
-    const createPeerConnection = (toPeerId: string) => {
+    const createPeerConnection = (toPeerId: string): RTCPeerConnection => {
         const existingConnection = peerConnections.current.get(toPeerId);
 
         if (existingConnection) {
@@ -70,6 +70,29 @@ const useRoomPage = (code?: string) => {
         };
 
         return peerConnection;
+    };
+
+    const createOffer = async (
+        toPeerId: string,
+    ): Promise<RTCSessionDescriptionInit | null> => {
+        try {
+            const pc = createPeerConnection(toPeerId);
+            
+            const stream = localStream.current;
+
+            stream?.getTracks().forEach((track) => {
+                pc.addTrack(track, stream);
+            });
+
+            const offer = await pc.createOffer();
+
+            await pc.setLocalDescription(offer);
+
+            return offer;
+        } catch (error) {
+            notifyError(errorMessage);
+            return null;
+        }
     };
 
     const onReady = (stream: MediaStream, name: string) => {
