@@ -4,6 +4,7 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type {
+    IceCandidateOutgoingMessage,
     JoinMessage,
     Participant,
     RoomWsMessage,
@@ -45,8 +46,27 @@ const useRoomPage = (code?: string) => {
         peerConnections.current.set(toPeerId, peerConnection);
 
         peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
+            const candidate = event.candidate;
+
+            if (candidate) {
+                const iceCandidateMessage: IceCandidateOutgoingMessage = {
+                    type: "ice_candidate",
+                    targetPeerId: toPeerId,
+                    candidate,
+                };
+
+                socket.current?.send(JSON.stringify(iceCandidateMessage));
             }
+        };
+
+        peerConnection.ontrack = (event) => {
+            const stream = event.streams[0];
+
+            if (!stream) return;
+
+            setParticipants((prev) =>
+                prev.map((p) => (p.peerId === toPeerId ? { ...p, stream } : p)),
+            );
         };
 
         return peerConnection;
