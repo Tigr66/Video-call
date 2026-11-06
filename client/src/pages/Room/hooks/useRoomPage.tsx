@@ -185,13 +185,16 @@ const useRoomPage = (code?: string) => {
     };
 
     const handleParticipantLeft = (data: ParticipantLeftMessage) => {
+        peerConnections.current.get(data.peerId)?.close();
+        peerConnections.current.delete(data.peerId);
+
+        setParticipants((prev) => prev.filter((p) => p.peerId !== data.peerId));
+
         notifyInfo(`${data.name} покинул комнату`);
     };
 
     const handleOffer = async (data: OfferMessage) => {
-        const pc = getPeerConnectionById(data.fromPeerId);
-
-        if (!pc) return;
+        const pc = createPeerConnection(data.fromPeerId);
 
         await pc.setRemoteDescription(data.offer);
 
@@ -201,8 +204,6 @@ const useRoomPage = (code?: string) => {
         );
 
         if (!answer) return;
-
-        await pc.setLocalDescription(answer);
 
         const answerMessage: AnswerOutgoingMessage = {
             type: "answer",
@@ -234,7 +235,7 @@ const useRoomPage = (code?: string) => {
                 break;
 
             case "existing_participants":
-                handleExistingParticipants(data);
+                await handleExistingParticipants(data);
                 break;
 
             case "new_participant":
