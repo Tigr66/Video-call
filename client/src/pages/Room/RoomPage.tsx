@@ -12,7 +12,7 @@ const RoomPage = () => {
         remoteStreams,
         localStream,
         userName,
-        onReady,
+        handleReady,
         roomNotFound,
         renderJoinModal,
         isLoading,
@@ -35,7 +35,7 @@ const RoomPage = () => {
                 bg-size-[400%_400%]
                 animate-gradient sm:p-3"
         >
-            {renderJoinModal && <JoinRoomModal onReady={onReady} />}
+            {renderJoinModal && <JoinRoomModal onReady={handleReady} />}
             {roomNotFound && <NotFoundRoom />}
             {isLoading && (
                 <div className="flex flex-col items-center justify-center gap-1 h-screen">

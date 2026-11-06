@@ -10,6 +10,7 @@ import type {
     JoinMessage,
     NewParticipantMessage,
     Participant,
+    ParticipantLeftMessage,
     RoomWsMessage,
 } from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -102,7 +103,7 @@ const useRoomPage = (code?: string) => {
         }
     };
 
-    const onReady = (stream: MediaStream, name: string) => {
+    const handleReady = (stream: MediaStream, name: string) => {
         localStream.current = stream;
         setUserName(name);
         setHasJoined(true);
@@ -153,6 +154,10 @@ const useRoomPage = (code?: string) => {
         notifyInfo(`${data.name} присоединился к комнате`);
     };
 
+    const handleParticipantLeft = (data: ParticipantLeftMessage) => {
+        notifyInfo(`${data.name} покинул комнату`);
+    };
+
     const onSocketMessage = async (event: MessageEvent) => {
         const data: RoomWsMessage = JSON.parse(event.data);
 
@@ -169,7 +174,7 @@ const useRoomPage = (code?: string) => {
         }
 
         if (data.type === "participant_left") {
-            notifyInfo(`${data.name} покинул комнату`);
+            handleParticipantLeft(data);
         }
 
         if (data.type === "offer") {
@@ -221,7 +226,7 @@ const useRoomPage = (code?: string) => {
         hasJoined,
         localStream,
         userName,
-        onReady,
+        handleReady,
         roomNotFound,
         renderJoinModal,
         isLoading,
