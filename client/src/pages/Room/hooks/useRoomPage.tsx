@@ -4,9 +4,11 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type {
+    AnswerMessage,
     AnswerOutgoingMessage,
     ErrorMessage,
     ExistingParticipantsMessage,
+    IceCandidateMessage,
     IceCandidateOutgoingMessage,
     JoinMessage,
     NewParticipantMessage,
@@ -17,7 +19,7 @@ import type {
     RoomWsMessage,
 } from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 
 const errorMessage =
     "Ошибка соединения с участником комнаты, попробуйте перезагрузить страницу";
@@ -211,6 +213,18 @@ const useRoomPage = (code?: string) => {
         socket.current?.send(JSON.stringify(answerMessage));
     };
 
+    const handleAnswer = async (data: AnswerMessage) => {
+        const pc = getPeerConnectionById(data.fromPeerId);
+
+        if (pc) await pc.setRemoteDescription(data.answer);
+    };
+
+    const handleIceCandidate = async (data: IceCandidateMessage) => {
+        const pc = getPeerConnectionById(data.fromPeerId);
+
+        if (pc) await pc.addIceCandidate(data.candidate);
+    };
+
     const onSocketMessage = async (event: MessageEvent) => {
         const data: RoomWsMessage = JSON.parse(event.data);
 
@@ -279,15 +293,14 @@ const useRoomPage = (code?: string) => {
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
     return {
-        remoteStreams,
         participants,
         hasJoined,
         localStream,
         userName,
-        handleReady,
         roomNotFound,
         renderJoinModal,
         isLoading,
+        handleReady,
         endCall,
     };
 };
