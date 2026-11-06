@@ -146,7 +146,7 @@ const useRoomPage = (code?: string) => {
         localStream.current?.getTracks().forEach((track) => track.stop());
 
         setParticipants([]);
-    }, [localStream]);
+    }, []);
 
     const handleError = (data: ErrorMessage) => {
         notifyError(data.message);
