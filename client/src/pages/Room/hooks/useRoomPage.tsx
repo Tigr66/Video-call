@@ -4,8 +4,11 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type {
+    ErrorMessage,
+    ExistingParticipantsMessage,
     IceCandidateOutgoingMessage,
     JoinMessage,
+    NewParticipantMessage,
     Participant,
     RoomWsMessage,
 } from "@/types/room/room-ws.types";
@@ -105,15 +108,6 @@ const useRoomPage = (code?: string) => {
         setHasJoined(true);
     };
 
-    const cleanUp = useCallback(() => {}, [localStream]);
-
-    const endCall = () => {
-        cleanUp();
-        setHasJoined(false);
-        localStream.current = null;
-        navigate(appRoutes.HOME_PAGE);
-    };
-
     const onOpenSocket = () => {
         const joinMessage: JoinMessage = {
             type: "join",
@@ -123,23 +117,55 @@ const useRoomPage = (code?: string) => {
         socket.current?.send(JSON.stringify(joinMessage));
     };
 
+    const endCall = () => {
+        cleanUp();
+        setHasJoined(false);
+        localStream.current = null;
+        navigate(appRoutes.HOME_PAGE);
+    };
+
+    const cleanUp = useCallback(() => {
+        socket.current?.close();
+        socket.current = null;
+
+        peerConnections.current.forEach((pc) => pc.close());
+        peerConnections.current.clear();
+
+        localStream.current?.getTracks().forEach((track) => track.stop());
+
+        setParticipants([]);
+    }, [localStream]);
+
+    const handleError = (data: ErrorMessage) => {
+        notifyError(data.message);
+    };
+
+    const handleExistingParticipants = (data: ExistingParticipantsMessage) => {
+        setParticipants(data.participants);
+    };
+
+    const handleNewParticipant = (data: NewParticipantMessage) => {
+        setParticipants((prev) => [
+            ...prev,
+            { peerId: data.peerId, name: data.name },
+        ]);
+
+        notifyInfo(`${data.name} присоединился к комнате`);
+    };
+
     const onSocketMessage = async (event: MessageEvent) => {
         const data: RoomWsMessage = JSON.parse(event.data);
 
         if (data.type === "error") {
-            notifyError(data.message);
+            handleError(data);
         }
 
         if (data.type === "existing_participants") {
+            handleExistingParticipants(data);
         }
 
         if (data.type === "new_participant") {
-            setParticipants((prev) => [
-                ...prev,
-                { peerId: data.peerId, name: data.name },
-            ]);
-
-            notifyInfo(`${data.name} присоединился к комнате`);
+            handleNewParticipant(data);
         }
 
         if (data.type === "participant_left") {
