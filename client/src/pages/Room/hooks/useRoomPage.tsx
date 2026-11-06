@@ -72,23 +72,27 @@ const useRoomPage = (code?: string) => {
         return peerConnection;
     };
 
-    const createOffer = async (
+    const createSessionDescription = async (
         toPeerId: string,
+        type: "offer" | "answer",
     ): Promise<RTCSessionDescriptionInit | null> => {
         try {
             const pc = createPeerConnection(toPeerId);
-            
+
             const stream = localStream.current;
 
             stream?.getTracks().forEach((track) => {
                 pc.addTrack(track, stream);
             });
 
-            const offer = await pc.createOffer();
+            const sessionDescription =
+                type === "offer"
+                    ? await pc.createOffer()
+                    : await pc.createAnswer();
 
-            await pc.setLocalDescription(offer);
+            await pc.setLocalDescription(sessionDescription);
 
-            return offer;
+            return sessionDescription;
         } catch (error) {
             notifyError(errorMessage);
             return null;
