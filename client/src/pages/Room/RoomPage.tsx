@@ -9,24 +9,16 @@ const RoomPage = () => {
 
     const {
         participants,
-        remoteStreams,
         localStream,
         userName,
-        handleReady,
         roomNotFound,
         renderJoinModal,
         isLoading,
-        endCall,
         hasJoined,
+        displayedParticipantCount,
+        endCall,
+        handleReady,
     } = useRoomPage(code);
-
-    const remoteVideos = participants.flatMap((participant) => {
-        const stream = remoteStreams.get(participant.peerId);
-
-        return stream ? [{ participant, stream }] : [];
-    });
-    const displayedParticipantCount =
-        remoteVideos.length + (localStream ? 1 : 0);
 
     return (
         <div
@@ -47,18 +39,14 @@ const RoomPage = () => {
             <div className="video-grid" data-count={displayedParticipantCount}>
                 {localStream && (
                     <Video
-                        stream={localStream}
+                        stream={localStream.current}
                         name={userName}
                         muted
                         mirrored
                     />
                 )}
-                {remoteVideos.map(({ participant, stream }) => (
-                    <Video
-                        key={participant.peerId}
-                        stream={stream}
-                        name={participant.name}
-                    />
+                {participants.map((p) => (
+                    <Video key={p.peerId} stream={p.stream} name={p.name} />
                 ))}
             </div>
             {hasJoined && (

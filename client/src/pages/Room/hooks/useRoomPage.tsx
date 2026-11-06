@@ -19,7 +19,7 @@ import type {
     RoomWsMessage,
 } from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const errorMessage =
     "Ошибка соединения с участником комнаты, попробуйте перезагрузить страницу";
@@ -292,6 +292,9 @@ const useRoomPage = (code?: string) => {
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
+    const displayedParticipantCount =
+        participants.length + (localStream.current ? 1 : 0);
+
     return {
         participants,
         hasJoined,
@@ -300,6 +303,7 @@ const useRoomPage = (code?: string) => {
         roomNotFound,
         renderJoinModal,
         isLoading,
+        displayedParticipantCount,
         handleReady,
         endCall,
     };
