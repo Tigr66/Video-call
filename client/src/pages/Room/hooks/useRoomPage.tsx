@@ -214,30 +214,34 @@ const useRoomPage = (code?: string) => {
     const onSocketMessage = async (event: MessageEvent) => {
         const data: RoomWsMessage = JSON.parse(event.data);
 
-        if (data.type === "error") {
-            handleError(data);
-        }
+        switch (data.type) {
+            case "error":
+                handleError(data);
+                break;
 
-        if (data.type === "existing_participants") {
-            handleExistingParticipants(data);
-        }
+            case "existing_participants":
+                handleExistingParticipants(data);
+                break;
 
-        if (data.type === "new_participant") {
-            handleNewParticipant(data);
-        }
+            case "new_participant":
+                handleNewParticipant(data);
+                break;
 
-        if (data.type === "participant_left") {
-            handleParticipantLeft(data);
-        }
+            case "participant_left":
+                handleParticipantLeft(data);
+                break;
 
-        if (data.type === "offer") {
-            handleOffer(data);
-        }
+            case "offer":
+                await handleOffer(data);
+                break;
 
-        if (data.type === "answer") {
-        }
+            case "answer":
+                await handleAnswer(data);
+                break;
 
-        if (data.type === "ice_candidate") {
+            case "ice_candidate":
+                await handleIceCandidate(data);
+                break;
         }
     };
 
