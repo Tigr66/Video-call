@@ -4,11 +4,14 @@ import { notifyError, notifyInfo } from "@/services/notify.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getRoomByCodeThunk } from "@/store/room-slice/room-thunks";
 import type {
+    AnswerOutgoingMessage,
     ErrorMessage,
     ExistingParticipantsMessage,
     IceCandidateOutgoingMessage,
     JoinMessage,
     NewParticipantMessage,
+    OfferMessage,
+    OfferOutgoingMessage,
     Participant,
     ParticipantLeftMessage,
     RoomWsMessage,
@@ -35,6 +38,12 @@ const useRoomPage = (code?: string) => {
     const localStream = useRef<MediaStream | null>(null);
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
     const socket = useRef<WebSocket | null>(null);
+
+    const getPeerConnectionById = (
+        id: string,
+    ): RTCPeerConnection | undefined => {
+        return peerConnections.current.get(id);
+    };
 
     const createPeerConnection = (toPeerId: string): RTCPeerConnection => {
         const existingConnection = peerConnections.current.get(toPeerId);
@@ -141,8 +150,27 @@ const useRoomPage = (code?: string) => {
         notifyError(data.message);
     };
 
-    const handleExistingParticipants = (data: ExistingParticipantsMessage) => {
+    const handleExistingParticipants = async (
+        data: ExistingParticipantsMessage,
+    ) => {
         setParticipants(data.participants);
+
+        for (const participant of data.participants) {
+            const offer = await createSessionDescription(
+                participant.peerId,
+                "offer",
+            );
+
+            if (!offer) continue;
+
+            const offerMessage: OfferOutgoingMessage = {
+                type: "offer",
+                targetPeerId: participant.peerId,
+                offer,
+            };
+
+            socket.current?.send(JSON.stringify(offerMessage));
+        }
     };
 
     const handleNewParticipant = (data: NewParticipantMessage) => {
@@ -156,6 +184,31 @@ const useRoomPage = (code?: string) => {
 
     const handleParticipantLeft = (data: ParticipantLeftMessage) => {
         notifyInfo(`${data.name} покинул комнату`);
+    };
+
+    const handleOffer = async (data: OfferMessage) => {
+        const pc = getPeerConnectionById(data.fromPeerId);
+
+        if (!pc) return;
+
+        await pc.setRemoteDescription(data.offer);
+
+        const answer = await createSessionDescription(
+            data.fromPeerId,
+            "answer",
+        );
+
+        if (!answer) return;
+
+        await pc.setLocalDescription(answer);
+
+        const answerMessage: AnswerOutgoingMessage = {
+            type: "answer",
+            targetPeerId: data.fromPeerId,
+            answer,
+        };
+
+        socket.current?.send(JSON.stringify(answerMessage));
     };
 
     const onSocketMessage = async (event: MessageEvent) => {
@@ -178,6 +231,7 @@ const useRoomPage = (code?: string) => {
         }
 
         if (data.type === "offer") {
+            handleOffer(data);
         }
 
         if (data.type === "answer") {
