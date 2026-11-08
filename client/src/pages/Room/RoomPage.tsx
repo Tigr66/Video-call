@@ -37,7 +37,7 @@ const RoomPage = () => {
             )}
 
             <div className="video-grid" data-count={displayedParticipantCount}>
-                {localStream && (
+                {localStream.current && (
                     <Video
                         stream={localStream.current}
                         name={userName}
