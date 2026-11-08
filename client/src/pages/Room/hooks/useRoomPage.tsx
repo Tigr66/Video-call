@@ -54,6 +54,24 @@ const useRoomPage = (code?: string) => {
         return pendingCandidates.current.get(id);
     };
 
+    const flushPendingCandidates = async (id: string) => {
+        try {
+            const pc = getPeerConnectionById(id);
+
+            const candidates = getCandidatesById(id);
+
+            if (!pc || !candidates?.length) return;
+
+            for (const candidate of candidates) {
+                await pc.addIceCandidate(candidate);
+            }
+
+            pendingCandidates.current.delete(id);
+        } catch {
+            notifyError(errorMessage);
+        }
+    };
+
     const createPeerConnection = (toPeerId: string): RTCPeerConnection => {
         const existingConnection = peerConnections.current.get(toPeerId);
 
@@ -209,20 +227,14 @@ const useRoomPage = (code?: string) => {
 
         await pc.setRemoteDescription(data.offer);
 
+        await flushPendingCandidates(data.fromPeerId);
+
         const answer = await createSessionDescription(
             data.fromPeerId,
             "answer",
         );
 
         if (!answer) return;
-
-        const candidates = getCandidatesById(data.fromPeerId);
-
-        if (candidates) {
-            for (const candidate of candidates) {
-                await pc.addIceCandidate(candidate);
-            }
-        }
 
         const answerMessage: AnswerOutgoingMessage = {
             type: "answer",
@@ -237,19 +249,35 @@ const useRoomPage = (code?: string) => {
         try {
             const pc = getPeerConnectionById(data.fromPeerId);
 
-            if (pc) await pc.setRemoteDescription(data.answer);
+            if (pc) {
+                await pc.setRemoteDescription(data.answer);
+                await flushPendingCandidates(data.fromPeerId);
+            }
         } catch {
             notifyError(errorMessage);
         }
     };
 
     const handleIceCandidate = async (data: IceCandidateMessage) => {
-        const candidates = getCandidatesById(data.fromPeerId);
+        try {
+            const pc = getPeerConnectionById(data.fromPeerId);
 
-        if (candidates) {
-            candidates.push(data.candidate);
-        } else {
-            pendingCandidates.current.set(data.fromPeerId, [data.candidate]);
+            if (pc?.remoteDescription) {
+                await pc.addIceCandidate(data.candidate);
+                return;
+            }
+
+            const candidates = getCandidatesById(data.fromPeerId);
+
+            if (candidates) {
+                candidates.push(data.candidate);
+            } else {
+                pendingCandidates.current.set(data.fromPeerId, [
+                    data.candidate,
+                ]);
+            }
+        } catch {
+            notifyError(errorMessage);
         }
     };
 
