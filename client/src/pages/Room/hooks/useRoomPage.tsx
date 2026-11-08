@@ -229,26 +229,30 @@ const useRoomPage = (code?: string) => {
     };
 
     const handleIncomingOffer = async (data: OfferMessage) => {
-        const pc = createPeerConnection(data.fromPeerId);
+        try {
+            const pc = createPeerConnection(data.fromPeerId);
 
-        await pc.setRemoteDescription(data.offer);
+            await pc.setRemoteDescription(data.offer);
 
-        await flushPendingCandidates(data.fromPeerId);
+            await flushPendingCandidates(data.fromPeerId);
 
-        const answer = await createSessionDescription(
-            data.fromPeerId,
-            "answer",
-        );
+            const answer = await createSessionDescription(
+                data.fromPeerId,
+                "answer",
+            );
 
-        if (!answer) return;
+            if (!answer) return;
 
-        const answerMessage: AnswerOutgoingMessage = {
-            type: "answer",
-            targetPeerId: data.fromPeerId,
-            answer,
-        };
+            const answerMessage: AnswerOutgoingMessage = {
+                type: "answer",
+                targetPeerId: data.fromPeerId,
+                answer,
+            };
 
-        socket.current?.send(JSON.stringify(answerMessage));
+            socket.current?.send(JSON.stringify(answerMessage));
+        } catch {
+            notifyError(errorMessage);
+        }
     };
 
     const handleIncomingAnswer = async (data: AnswerMessage) => {
@@ -288,36 +292,40 @@ const useRoomPage = (code?: string) => {
     };
 
     const onSocketMessage = async (event: MessageEvent) => {
-        const data: RoomWsMessage = JSON.parse(event.data);
+        try {
+            const data: RoomWsMessage = JSON.parse(event.data);
 
-        switch (data.type) {
-            case "error":
-                handleError(data);
-                break;
+            switch (data.type) {
+                case "error":
+                    handleError(data);
+                    break;
 
-            case "existing_participants":
-                await handleExistingParticipants(data);
-                break;
+                case "existing_participants":
+                    await handleExistingParticipants(data);
+                    break;
 
-            case "new_participant":
-                handleNewParticipant(data);
-                break;
+                case "new_participant":
+                    handleNewParticipant(data);
+                    break;
 
-            case "participant_left":
-                handleParticipantLeft(data);
-                break;
+                case "participant_left":
+                    handleParticipantLeft(data);
+                    break;
 
-            case "offer":
-                await handleIncomingOffer(data);
-                break;
+                case "offer":
+                    await handleIncomingOffer(data);
+                    break;
 
-            case "answer":
-                await handleIncomingAnswer(data);
-                break;
+                case "answer":
+                    await handleIncomingAnswer(data);
+                    break;
 
-            case "ice_candidate":
-                await handleIncomingIceCandidate(data);
-                break;
+                case "ice_candidate":
+                    await handleIncomingIceCandidate(data);
+                    break;
+            }
+        } catch {
+            notifyError(errorMessage);
         }
     };
 
