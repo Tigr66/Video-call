@@ -46,7 +46,11 @@ const RoomPage = () => {
                     />
                 )}
                 {participants.map((p) => (
-                    <Video key={p.peerId} stream={p.stream} name={p.name} />
+                    <Video
+                        key={p.peerId}
+                        stream={p.stream ?? null}
+                        name={p.name}
+                    />
                 ))}
             </div>
             {hasJoined && (
