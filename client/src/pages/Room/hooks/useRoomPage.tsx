@@ -39,12 +39,19 @@ const useRoomPage = (code?: string) => {
 
     const localStream = useRef<MediaStream | null>(null);
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
+    const pendingCandidates = useRef(new Map<string, RTCIceCandidateInit[]>());
     const socket = useRef<WebSocket | null>(null);
 
     const getPeerConnectionById = (
         id: string,
     ): RTCPeerConnection | undefined => {
         return peerConnections.current.get(id);
+    };
+
+    const getCandidatesById = (
+        id: string,
+    ): RTCIceCandidateInit[] | undefined => {
+        return pendingCandidates.current.get(id);
     };
 
     const createPeerConnection = (toPeerId: string): RTCPeerConnection => {
@@ -143,6 +150,8 @@ const useRoomPage = (code?: string) => {
         peerConnections.current.forEach((pc) => pc.close());
         peerConnections.current.clear();
 
+        pendingCandidates.current.clear();
+
         localStream.current?.getTracks().forEach((track) => track.stop());
 
         setParticipants([]);
@@ -188,6 +197,8 @@ const useRoomPage = (code?: string) => {
         peerConnections.current.get(data.peerId)?.close();
         peerConnections.current.delete(data.peerId);
 
+        pendingCandidates.current.delete(data.peerId);
+
         setParticipants((prev) => prev.filter((p) => p.peerId !== data.peerId));
 
         notifyInfo(`${data.name} покинул комнату`);
@@ -205,6 +216,14 @@ const useRoomPage = (code?: string) => {
 
         if (!answer) return;
 
+        const candidates = getCandidatesById(data.fromPeerId);
+
+        if (candidates) {
+            for (const candidate of candidates) {
+                await pc.addIceCandidate(candidate);
+            }
+        }
+
         const answerMessage: AnswerOutgoingMessage = {
             type: "answer",
             targetPeerId: data.fromPeerId,
@@ -217,7 +236,7 @@ const useRoomPage = (code?: string) => {
     const handleAnswer = async (data: AnswerMessage) => {
         try {
             const pc = getPeerConnectionById(data.fromPeerId);
-            
+
             if (pc) await pc.setRemoteDescription(data.answer);
         } catch {
             notifyError(errorMessage);
@@ -225,12 +244,12 @@ const useRoomPage = (code?: string) => {
     };
 
     const handleIceCandidate = async (data: IceCandidateMessage) => {
-        try {
-            const pc = getPeerConnectionById(data.fromPeerId);
+        const candidates = getCandidatesById(data.fromPeerId);
 
-            if (pc) await pc.addIceCandidate(data.candidate);
-        } catch {
-            notifyError(errorMessage);
+        if (candidates) {
+            candidates.push(data.candidate);
+        } else {
+            pendingCandidates.current.set(data.fromPeerId, [data.candidate]);
         }
     };
 
