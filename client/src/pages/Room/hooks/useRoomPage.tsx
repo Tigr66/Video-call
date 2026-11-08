@@ -222,7 +222,7 @@ const useRoomPage = (code?: string) => {
         notifyInfo(`${data.name} покинул комнату`);
     };
 
-    const handleOffer = async (data: OfferMessage) => {
+    const handleIncomingOffer = async (data: OfferMessage) => {
         const pc = createPeerConnection(data.fromPeerId);
 
         await pc.setRemoteDescription(data.offer);
@@ -245,7 +245,7 @@ const useRoomPage = (code?: string) => {
         socket.current?.send(JSON.stringify(answerMessage));
     };
 
-    const handleAnswer = async (data: AnswerMessage) => {
+    const handleIncomingAnswer = async (data: AnswerMessage) => {
         try {
             const pc = getPeerConnectionById(data.fromPeerId);
 
@@ -258,7 +258,7 @@ const useRoomPage = (code?: string) => {
         }
     };
 
-    const handleIceCandidate = async (data: IceCandidateMessage) => {
+    const handleIncomingIceCandidate = async (data: IceCandidateMessage) => {
         try {
             const pc = getPeerConnectionById(data.fromPeerId);
 
@@ -302,15 +302,15 @@ const useRoomPage = (code?: string) => {
                 break;
 
             case "offer":
-                await handleOffer(data);
+                await handleIncomingOffer(data);
                 break;
 
             case "answer":
-                await handleAnswer(data);
+                await handleIncomingAnswer(data);
                 break;
 
             case "ice_candidate":
-                await handleIceCandidate(data);
+                await handleIncomingIceCandidate(data);
                 break;
         }
     };
