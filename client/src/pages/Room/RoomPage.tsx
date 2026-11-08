@@ -50,6 +50,7 @@ const RoomPage = () => {
                         key={p.peerId}
                         stream={p.stream ?? null}
                         name={p.name}
+                        mirrored
                     />
                 ))}
             </div>
