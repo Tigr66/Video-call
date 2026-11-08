@@ -29,7 +29,7 @@ const Video = ({
                 />
             ) : (
                 <img
-                    src="/avatar-placeholder.png"
+                    src="/images/video-placeholder.png"
                     alt="Нет видеопотока"
                     className="h-full w-full object-cover"
                 />
