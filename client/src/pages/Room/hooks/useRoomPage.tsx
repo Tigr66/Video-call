@@ -122,7 +122,13 @@ const useRoomPage = (code?: string) => {
             const stream = localStream.current;
 
             stream?.getTracks().forEach((track) => {
-                pc.addTrack(track, stream);
+                const alreadyAdded = pc
+                    .getSenders()
+                    .some((sender) => sender.track === track);
+
+                if (!alreadyAdded) {
+                    pc.addTrack(track, stream);
+                }
             });
 
             const sessionDescription =
