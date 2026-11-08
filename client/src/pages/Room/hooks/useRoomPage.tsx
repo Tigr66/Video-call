@@ -215,15 +215,23 @@ const useRoomPage = (code?: string) => {
     };
 
     const handleAnswer = async (data: AnswerMessage) => {
-        const pc = getPeerConnectionById(data.fromPeerId);
-
-        if (pc) await pc.setRemoteDescription(data.answer);
+        try {
+            const pc = getPeerConnectionById(data.fromPeerId);
+            
+            if (pc) await pc.setRemoteDescription(data.answer);
+        } catch {
+            notifyError(errorMessage);
+        }
     };
 
     const handleIceCandidate = async (data: IceCandidateMessage) => {
-        const pc = getPeerConnectionById(data.fromPeerId);
+        try {
+            const pc = getPeerConnectionById(data.fromPeerId);
 
-        if (pc) await pc.addIceCandidate(data.candidate);
+            if (pc) await pc.addIceCandidate(data.candidate);
+        } catch {
+            notifyError(errorMessage);
+        }
     };
 
     const onSocketMessage = async (event: MessageEvent) => {
