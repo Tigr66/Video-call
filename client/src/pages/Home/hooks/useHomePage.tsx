@@ -4,6 +4,8 @@ import { addRoomThunk } from "@/store/room-slice/room-thunks";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const invalidCharsRegex: RegExp = /[^A-Z0-9]/g;
+
 const useHomePage = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -13,7 +15,15 @@ const useHomePage = () => {
     const { isLoading, isSending } = useAppSelector((state) => state.room);
 
     const handleSetCode = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.value.length <= 6) setCode(event.target.value);
+        const value = event.target.value
+            .toUpperCase()
+            .replace(invalidCharsRegex, "")
+            .slice(0, 6);
+
+        const formattedValue =
+            value.length > 3 ? `${value.slice(0, 3)}-${value.slice(3)}` : value;
+
+        setCode(formattedValue);
     };
 
     const handleCreateRoom = async () => {
@@ -23,10 +33,11 @@ const useHomePage = () => {
     };
 
     const handleJoinRoom = () => {
-        navigate(appRoutes.ROOM_PAGE.replace(":code", code));
+        navigate(appRoutes.ROOM_PAGE.replace(":code", code.replace("-", "")));
     };
 
-    const isJoinButtonDisabled = code.length !== 6 || isSending;
+    const isJoinButtonDisabled =
+        code.replace("-", "").length !== 6 || isSending;
 
     return {
         code,
