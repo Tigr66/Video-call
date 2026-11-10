@@ -17,4 +17,20 @@ export class RoomService {
     async getRoomByCode(code: string): Promise<Room | null> {
         return await this.roomRepository.getRoomByCode(code.toUpperCase());
     }
+
+    deleteRoomByCode(code: string): Promise<Room | null> {
+        return this.roomRepository.deleteRoomByCode(code.toUpperCase());
+    }
+
+    async activateRoomByCode(code: string): Promise<Room | null> {
+        return await this.roomRepository.activateRoomByCode(code.toUpperCase());
+    }   
+
+    async deactivateRoomByCode(code: string): Promise<Room | null> {
+        return await this.roomRepository.deactivateRoomByCode(code.toUpperCase());
+    }
+
+    async getExpiredInactiveRooms(): Promise<Room[]> {
+        return await this.roomRepository.getExpiredInactiveRooms();
+    } 
 }
