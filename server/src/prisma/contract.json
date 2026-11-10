@@ -28,6 +28,20 @@
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
+              },
+              "inactiveAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {},
@@ -38,6 +52,12 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "inactiveAt": {
+                  "column": "inactiveAt"
+                },
+                "isActive": {
+                  "column": "isActive"
                 }
               },
               "namespaceId": "public",
@@ -64,6 +84,20 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "inactiveAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "isActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
                 }
               },
               "foreignKeys": [],
@@ -87,7 +121,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1eefabdf1dc6a4a344a0e599efdbcaec40f333a0ff11ffe84ad2ebbc6fdcd150"
+    "storageHash": "81a30e2e7c232bb81a31f00c1de66eda6279ca58dfbca818b521de459789baac"
   },
   "execution": {
     "executionHash": "62728603e907863e5751b86ae3b0e539bcbedea148d002d56daabc467d83a73b",

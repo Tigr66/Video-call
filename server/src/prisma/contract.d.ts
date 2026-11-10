@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'1eefabdf1dc6a4a344a0e599efdbcaec40f333a0ff11ffe84ad2ebbc6fdcd150'>;
+  StorageHashBase<'81a30e2e7c232bb81a31f00c1de66eda6279ca58dfbca818b521de459789baac'>;
 export type ExecutionHash =
   ExecutionHashBase<'62728603e907863e5751b86ae3b0e539bcbedea148d002d56daabc467d83a73b'>;
 export type ProfileHash =
@@ -245,6 +245,8 @@ export type FieldOutputTypes = {
     readonly Room: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly code: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly inactiveAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     };
   };
 };
@@ -253,6 +255,8 @@ export type FieldInputTypes = {
     readonly Room: {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly code: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly inactiveAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
     };
   };
 };
@@ -261,6 +265,8 @@ export type StorageColumnTypes = {
     readonly room: {
       readonly code: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
+      readonly inactiveAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
     };
   };
 };
@@ -269,6 +275,8 @@ export type StorageColumnInputTypes = {
     readonly room: {
       readonly code: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
+      readonly inactiveAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
     };
   };
 };
@@ -277,6 +285,8 @@ export namespace Models {
   export type public_Room = {
     id: CodecTypes['pg/text@1']['output'];
     code: CodecTypes['pg/text@1']['output'];
+    isActive: CodecTypes['pg/bool@1']['output'];
+    inactiveAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     readonly [RelationKeys]?: never;
   };
 }
@@ -317,6 +327,20 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly inactiveAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [{ readonly columns: readonly ['code'] }];
@@ -350,6 +374,17 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly inactiveAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
             };
             readonly relations: Record<string, never>;
             readonly storage: {
@@ -358,6 +393,8 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly code: { readonly column: 'code' };
+                readonly isActive: { readonly column: 'isActive' };
+                readonly inactiveAt: { readonly column: 'inactiveAt' };
               };
             };
           };
