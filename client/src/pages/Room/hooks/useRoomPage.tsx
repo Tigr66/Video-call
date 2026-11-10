@@ -20,6 +20,7 @@ import type {
 } from "@/types/room/room-ws.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useUserName from "@/hooks/useUserName";
 
 const errorMessage =
     "Ошибка соединения с участником комнаты, попробуйте перезагрузить страницу";
@@ -27,6 +28,8 @@ const errorMessage =
 const useRoomPage = (code?: string) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
+    const { saveUserName } = useUserName();
 
     const { currentRoomCode, isLoading } = useAppSelector(
         (state) => state.room,
@@ -148,6 +151,7 @@ const useRoomPage = (code?: string) => {
     const handleReady = (stream: MediaStream, name: string) => {
         localStream.current = stream;
         setUserName(name);
+        saveUserName(name);
         setHasJoined(true);
     };
 
