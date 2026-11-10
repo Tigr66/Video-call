@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill/full/implementation";
 import { Room } from "../types/room.types";
 import { BaseRepository } from "./base.repository";
 
@@ -6,7 +7,7 @@ export class RoomRepository extends BaseRepository {
         try {
             return await this.models.Room.create({
                 code,
-                inactiveAt: new Date(),
+                inactiveAt: Temporal.Now.instant(),
             });
         } catch (e) {
             this.handleError(e, "Ошибка при создании комнаты");
