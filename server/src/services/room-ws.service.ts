@@ -1,6 +1,10 @@
 import WebSocket from "ws";
 import { Request } from "express";
-import { Participant, RoomMessage } from "../types/room-ws.types";
+import {
+    Participant,
+    RoomIncomingMessage,
+    RoomOutgoingMessage,
+} from "../types/room-ws.types";
 import { BaseWsService } from "./base-ws.service";
 import { RoomService } from "./room.service";
 import { nanoid } from "nanoid";
@@ -75,20 +79,20 @@ export class RoomWsService extends BaseWsService {
             await this.roomService.activateRoomByCode(code);
         }
 
+        if (participants.has(peerId)) return;
+
         if (participants.size >= 4) {
             this.sendError(ws, "Комната заполнена. Максимум 4 участника");
             ws.close();
             return;
         }
 
-        participants.forEach((participant) => {
-            participant.ws.send(
-                JSON.stringify({
-                    type: "new_participant",
-                    peerId,
-                    name,
-                }),
-            );
+        participants.forEach((p) => {
+            this.sendToParticipant(p, {
+                type: "new_participant",
+                peerId,
+                name,
+            });
         });
 
         const existingParticipants = [...participants.values()].map(
@@ -117,13 +121,11 @@ export class RoomWsService extends BaseWsService {
         participants.delete(peerId);
 
         participants.forEach((p) => {
-            p.ws.send(
-                JSON.stringify({
-                    type: "participant_left",
-                    peerId,
-                    name: participant.name,
-                }),
-            );
+            this.sendToParticipant(p, {
+                type: "participant_left",
+                peerId,
+                name: participant.name,
+            });
         });
 
         if (participants.size === 0) {
@@ -140,27 +142,42 @@ export class RoomWsService extends BaseWsService {
         msg: WebSocket.RawData,
     ) {
         try {
-            const data: RoomMessage = JSON.parse(msg.toString());
+            const data: RoomIncomingMessage = JSON.parse(msg.toString());
 
-            if (data.type === "join") {
-                await this.joinRoom(code, peerId, data.name, ws);
-            }
+            switch (data.type) {
+                case "join":
+                    await this.joinRoom(code, peerId, data.name, ws);
+                    break;
 
-            if (data.type === "offer") {
-                this.handleOffer(code, data.targetPeerId, peerId, data.offer);
-            }
+                case "offer":
+                    if (!this.isParticipant(code, peerId)) return;
+                    this.handleOffer(
+                        code,
+                        data.targetPeerId,
+                        peerId,
+                        data.offer,
+                    );
+                    break;
 
-            if (data.type === "answer") {
-                this.handleAnswer(code, data.targetPeerId, peerId, data.answer);
-            }
+                case "answer":
+                    if (!this.isParticipant(code, peerId)) return;
+                    this.handleAnswer(
+                        code,
+                        data.targetPeerId,
+                        peerId,
+                        data.answer,
+                    );
+                    break;
 
-            if (data.type === "ice_candidate") {
-                this.handleIceCandidate(
-                    code,
-                    data.targetPeerId,
-                    peerId,
-                    data.candidate,
-                );
+                case "ice_candidate":
+                    if (!this.isParticipant(code, peerId)) return;
+                    this.handleIceCandidate(
+                        code,
+                        data.targetPeerId,
+                        peerId,
+                        data.candidate,
+                    );
+                    break;
             }
         } catch (e) {
             console.error("Ошибка:", e);
@@ -184,13 +201,11 @@ export class RoomWsService extends BaseWsService {
 
         if (!participant) return;
 
-        participant.ws.send(
-            JSON.stringify({
-                type: "offer",
-                fromPeerId,
-                offer,
-            }),
-        );
+        this.sendToParticipant(participant, {
+            type: "offer",
+            fromPeerId,
+            offer,
+        });
     }
 
     private handleAnswer(
@@ -207,13 +222,11 @@ export class RoomWsService extends BaseWsService {
 
         if (!participant) return;
 
-        participant.ws.send(
-            JSON.stringify({
-                type: "answer",
-                fromPeerId,
-                answer,
-            }),
-        );
+        this.sendToParticipant(participant, {
+            type: "answer",
+            fromPeerId,
+            answer,
+        });
     }
 
     private handleIceCandidate(
@@ -230,16 +243,27 @@ export class RoomWsService extends BaseWsService {
 
         if (!participant) return;
 
-        participant.ws.send(
-            JSON.stringify({
-                type: "ice_candidate",
-                fromPeerId,
-                candidate,
-            }),
-        );
+        this.sendToParticipant(participant, {
+            type: "ice_candidate",
+            fromPeerId,
+            candidate,
+        });
+    }
+
+    private sendToParticipant(
+        participant: Participant,
+        message: RoomOutgoingMessage,
+    ) {
+        if (participant.ws.readyState !== WebSocket.OPEN) return;
+
+        participant.ws.send(JSON.stringify(message));
     }
 
     private getParticipants(code: string) {
         return this.rooms.get(code);
+    }
+
+    private isParticipant(code: string, peerId: string) {
+        return this.getParticipants(code)?.has(peerId) ?? false;
     }
 }
