@@ -13,7 +13,8 @@ const useHomePage = () => {
     const { isLoading, isSending } = useAppSelector((state) => state.room);
 
     const handleSetCode = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.value.length <= 6) setCode(event.target.value);
+        if (event.target.value.length <= 6)
+            setCode(event.target.value.toUpperCase());
     };
 
     const handleCreateRoom = async () => {
