@@ -18,8 +18,8 @@ export class RoomService {
         return await this.roomRepository.getRoomByCode(code.toUpperCase());
     }
 
-    deleteRoomByCode(code: string): Promise<Room | null> {
-        return this.roomRepository.deleteRoomByCode(code.toUpperCase());
+    async deleteRoomByCode(code: string): Promise<Room | null> {
+        return await this.roomRepository.deleteRoomByCode(code.toUpperCase());
     }
 
     async activateRoomByCode(code: string): Promise<Room | null> {

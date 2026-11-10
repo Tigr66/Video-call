@@ -50,7 +50,7 @@ export class RoomWsService extends BaseWsService {
                 });
 
                 ws.on("close", async () => {
-                    this.leaveRoom(code, peerId);
+                    await this.leaveRoom(code, peerId);
                 });
             } catch (e) {
                 console.error(e);
@@ -60,7 +60,7 @@ export class RoomWsService extends BaseWsService {
         };
     }
 
-    private joinRoom(
+    private async joinRoom(
         code: string,
         peerId: string,
         name: string,
@@ -71,6 +71,8 @@ export class RoomWsService extends BaseWsService {
         if (!participants) {
             participants = new Map<string, Participant>();
             this.rooms.set(code, participants);
+
+            await this.roomService.activateRoomByCode(code);
         }
 
         if (participants.size >= 4) {
@@ -103,7 +105,7 @@ export class RoomWsService extends BaseWsService {
         participants.set(peerId, { peerId, name, ws });
     }
 
-    private leaveRoom(code: string, peerId: string) {
+    private async leaveRoom(code: string, peerId: string) {
         const participants = this.getParticipants(code);
 
         if (!participants) return;
@@ -126,6 +128,8 @@ export class RoomWsService extends BaseWsService {
 
         if (participants.size === 0) {
             this.rooms.delete(code);
+
+            await this.roomService.deactivateRoomByCode(code);
         }
     }
 
@@ -139,7 +143,7 @@ export class RoomWsService extends BaseWsService {
             const data: RoomMessage = JSON.parse(msg.toString());
 
             if (data.type === "join") {
-                this.joinRoom(code, peerId, data.name, ws);
+                await this.joinRoom(code, peerId, data.name, ws);
             }
 
             if (data.type === "offer") {
