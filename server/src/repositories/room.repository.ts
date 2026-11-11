@@ -16,10 +16,13 @@ export class RoomRepository extends BaseRepository {
 
     async getExpiredInactiveRooms(): Promise<Room[]> {
         try {
-            const expirationDate = new Date(Date.now() - 30 * 60 * 1000);
+            const expirationDate = Temporal.Now.instant().subtract({
+                minutes: 30,
+            });
 
             return await this.models.Room.where({ isActive: false })
                 .where((room) => room.inactiveAt.lte(expirationDate))
+                .orderBy((room) => room.inactiveAt.asc())
                 .all();
         } catch (e) {
             this.handleError(e, "Ошибка при получении неактивных комнат");
@@ -56,7 +59,7 @@ export class RoomRepository extends BaseRepository {
     async deactivateRoomByCode(code: string): Promise<Room | null> {
         try {
             return await this.models.Room.where({ code }).update({
-                inactiveAt: new Date(),
+                inactiveAt: Temporal.Now.instant(),
                 isActive: false,
             });
         } catch (e) {
