@@ -10,7 +10,11 @@ import expressWs from "express-ws";
 const clientUrl = process.env.CLIENT_URL ?? "http://localhost:5173";
 
 export const setupApp = () => {
-    const { app } = expressWs(express());
+    const { app } = expressWs(express(), undefined, {
+        wsOptions: {
+            maxPayload: 64 * 1024,
+        },
+    });
 
     app.set("trust proxy", 1);
 
