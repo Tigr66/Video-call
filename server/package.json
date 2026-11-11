@@ -1,6 +1,6 @@
 {
     "name": "call_up_server",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -17,9 +17,12 @@
         "cors": "^2.8.6",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
+        "express-rate-limit": "^8.7.4",
         "express-ws": "^5.0.2",
         "nanoid": "^6.0.1",
-        "pg": "^8.23.0"
+        "node-cron": "^4.6.0",
+        "pg": "^8.23.0",
+        "temporal-polyfill": "^1.0.8"
     },
     "devDependencies": {
         "@prisma/cli-engine": "^0.4.0",

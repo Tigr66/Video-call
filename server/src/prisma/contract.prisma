@@ -1,6 +1,8 @@
 // use prisma-8
 
 model Room {
-  id    String  @id @default(uuid())
-  code  String  @unique
+  id            String      @id @default(uuid())
+  code          String      @unique
+  isActive      Boolean     @default(false)
+  inactiveAt    DateTime?
 }

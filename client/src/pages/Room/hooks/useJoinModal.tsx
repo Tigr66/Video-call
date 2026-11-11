@@ -1,11 +1,14 @@
 import { notifyError } from "@/services/notify.service";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useUserName from "@/hooks/useUserName";
 
 const useJoinModal = (onReady: (stream: MediaStream, name: string) => void) => {
     const navigate = useNavigate();
 
-    const [name, setName] = useState<string>("");
+    const { getUserName } = useUserName();
+
+    const [name, setName] = useState<string>(getUserName());
 
     const [isLoading, setIsLoading] = useState(false);
 
