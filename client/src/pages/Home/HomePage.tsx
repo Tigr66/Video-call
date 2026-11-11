@@ -2,6 +2,7 @@ import { Divider } from "@/components/Divider";
 
 import useHomePage from "./hooks/useHomePage";
 import { Button } from "@/components/Button";
+import { AppVersion } from "@/components/AppVersion";
 
 const HomePage = () => {
     const {
@@ -14,7 +15,7 @@ const HomePage = () => {
     } = useHomePage();
 
     return (
-        <div className="w-full h-screen flex flex-col gap-4">
+        <div className="w-full h-screen relative flex flex-col gap-4">
             <h1 className="text-2xl text-center text-slate-600 font-bold border-b-2 border-slate-600 p-4 sm:text-left sm:text-3xl md:text-4xl">
                 Добро пожаловать в{" "}
                 <span className="text-indigo-500">CallUp</span>
@@ -53,6 +54,7 @@ const HomePage = () => {
                     </Button>
                 </div>
             </div>
+            <AppVersion />
         </div>
     );
 };
