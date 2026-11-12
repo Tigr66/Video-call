@@ -4,9 +4,10 @@ import { useState } from "react";
 interface CopyButtonProps {
     copyText: string;
     className?: string;
+    iconSize?: number;
 }
 
-const CopyButton = ({ className, copyText }: CopyButtonProps) => {
+const CopyButton = ({ className, copyText, iconSize }: CopyButtonProps) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async () => {
@@ -27,7 +28,7 @@ const CopyButton = ({ className, copyText }: CopyButtonProps) => {
             aria-label={copied ? "Скопировано" : "Скопировать"}
             title={copied ? "Скопировано" : "Скопировать"}
         >
-            {copied ? <Check /> : <Copy />}
+            {copied ? <Check size={iconSize} /> : <Copy size={iconSize} />}
         </button>
     );
 };
