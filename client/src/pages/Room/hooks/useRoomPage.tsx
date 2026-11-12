@@ -31,9 +31,7 @@ const useRoomPage = (code?: string) => {
 
     const { saveUserName } = useUserName();
 
-    const { currentRoomCode, isLoading } = useAppSelector(
-        (state) => state.room,
-    );
+    const { isLoading } = useAppSelector((state) => state.room);
 
     const [hasJoined, setHasJoined] = useState<boolean>(false);
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
@@ -361,8 +359,7 @@ const useRoomPage = (code?: string) => {
         };
     }, [hasJoined, code, cleanUp]);
 
-    const roomNotFound =
-        hasCheckedRoom && !isLoading && currentRoomCode !== code;
+    const roomNotFound = hasCheckedRoom && !isLoading;
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
 
