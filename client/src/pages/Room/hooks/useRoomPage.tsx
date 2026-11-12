@@ -33,6 +33,7 @@ const useRoomPage = (code?: string) => {
 
     const { isLoading } = useAppSelector((state) => state.room);
 
+    const [roomFound, setRoomFound] = useState<boolean>(false);
     const [hasJoined, setHasJoined] = useState<boolean>(false);
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
@@ -337,9 +338,16 @@ const useRoomPage = (code?: string) => {
 
     useEffect(() => {
         if (code) {
-            dispatch(getRoomByCodeThunk(code)).finally(() => {
-                setHasCheckedRoom(true);
-            });
+            dispatch(getRoomByCodeThunk(code))
+                .then(() => {
+                    setRoomFound(true);
+                })
+                .catch(() => {
+                    setRoomFound(false);
+                })
+                .finally(() => {
+                    setHasCheckedRoom(true);
+                });
         }
     }, [dispatch, code]);
 
@@ -359,9 +367,16 @@ const useRoomPage = (code?: string) => {
         };
     }, [hasJoined, code, cleanUp]);
 
-    const roomNotFound = hasCheckedRoom && !isLoading;
+    const roomNotFound = hasCheckedRoom && !isLoading && !roomFound;
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
+
+    const showRoomCode =
+        hasCheckedRoom &&
+        !isLoading &&
+        !renderJoinModal &&
+        !roomNotFound &&
+        code;
 
     const displayedParticipantCount =
         participants.length + (localStream.current ? 1 : 0);
@@ -373,6 +388,7 @@ const useRoomPage = (code?: string) => {
         userName,
         roomNotFound,
         renderJoinModal,
+        showRoomCode,
         isLoading,
         displayedParticipantCount,
         handleReady,
