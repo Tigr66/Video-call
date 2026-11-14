@@ -1,15 +1,17 @@
 import { CopyButton } from "@/components/CopyButton";
 import { X, Link } from "lucide-react";
+import useInviteToast from "../hooks/useInviteToast";
 
 interface RoomInviteToastProps {
     open: boolean;
+    seconds?: number;
     onClose?: () => void;
 }
 
-const RoomInviteToast = ({ open, onClose }: RoomInviteToastProps) => {
+const RoomInviteToast = ({ open, seconds, onClose }: RoomInviteToastProps) => {
     if (!open) return null;
 
-    const url = window.location.href;
+    const { url, width } = useInviteToast(seconds);
 
     return (
         <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-50 flex w-[90%] flex-col gap-3 overflow-hidden rounded-xl border border-gray-200 bg-white p-3 shadow-xl sm:w-80 sm:left-3 sm:translate-x-0">
@@ -28,7 +30,7 @@ const RoomInviteToast = ({ open, onClose }: RoomInviteToastProps) => {
                     type="button"
                     onClick={onClose}
                     aria-label="Закрыть"
-                    className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                    className="rounded-md p-1 text-gray-400 transition-colors cursor-pointer hover:bg-gray-100 hover:text-gray-700"
                 >
                     <X size={18} />
                 </button>
@@ -49,6 +51,13 @@ const RoomInviteToast = ({ open, onClose }: RoomInviteToastProps) => {
                     className="rounded-md p-1 text-gray-700 transition-colors hover:bg-gray-200 hover:text-gray-900"
                 />
             </div>
+
+            {seconds && (
+                <div
+                    className="h-2 transition-[width] rounded-md duration-100 ease-linear bg-blue-500"
+                    style={{ width: `${width}%` }}
+                />
+            )}
         </div>
     );
 };
