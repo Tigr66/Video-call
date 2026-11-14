@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface CopyButtonProps {
     copyText: string;
@@ -10,16 +10,30 @@ interface CopyButtonProps {
 const CopyButton = ({ className, copyText, iconSize }: CopyButtonProps) => {
     const [copied, setCopied] = useState(false);
 
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(copyText);
             setCopied(true);
 
-            setTimeout(() => setCopied(false), 2000);
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+
+            timeoutRef.current = setTimeout(() => setCopied(false), 2000);
         } catch (error) {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <button
