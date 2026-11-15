@@ -35,6 +35,7 @@ const useRoomPage = (code?: string) => {
 
     const [roomFound, setRoomFound] = useState<boolean>(false);
     const [hasJoined, setHasJoined] = useState<boolean>(false);
+    const [openInviteToast, setOpenInviteToast] = useState<boolean>(false);
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
     const [participants, setParticipants] = useState<Participant[]>([]);
@@ -43,6 +44,10 @@ const useRoomPage = (code?: string) => {
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
     const pendingCandidates = useRef(new Map<string, RTCIceCandidateInit[]>());
     const socket = useRef<WebSocket | null>(null);
+
+    const closeInviteToast = () => {
+        setOpenInviteToast(false);
+    };
 
     const getPeerConnectionById = (
         id: string,
@@ -367,6 +372,12 @@ const useRoomPage = (code?: string) => {
         };
     }, [hasJoined, code, cleanUp]);
 
+    useEffect(() => {
+        if (hasJoined) {
+            setOpenInviteToast(true);
+        }
+    }, [hasJoined]);
+
     const roomNotFound = hasCheckedRoom && !isLoading && !roomFound;
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
@@ -391,8 +402,10 @@ const useRoomPage = (code?: string) => {
         showRoomCode,
         isLoading,
         displayedParticipantCount,
+        openInviteToast,
         handleReady,
         endCall,
+        closeInviteToast,
     };
 };
 

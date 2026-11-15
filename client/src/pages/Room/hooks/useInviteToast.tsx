@@ -1,8 +1,19 @@
+import { ANIMATIONS } from "@/constants/animations.constants";
 import { useEffect, useRef, useState } from "react";
 
-const useInviteToast = (seconds?: number, onClose?: () => void) => {
+const INITIAL_ANIMATION = "hidden";
+
+const useInviteToast = (
+    open: boolean,
+    seconds?: number,
+    onClose?: () => void,
+) => {
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const [animationClass, setAnimationClass] =
+        useState<string>(INITIAL_ANIMATION);
+    const isFirstRender = useRef<boolean>(true);
 
     const [width, setWidth] = useState(100);
 
@@ -21,7 +32,7 @@ const useInviteToast = (seconds?: number, onClose?: () => void) => {
     useEffect(() => {
         setWidth(100);
 
-        if (seconds) {
+        if (open && seconds) {
             const intervalMs = 100;
             const totalMs = seconds * 1000;
 
@@ -42,11 +53,26 @@ const useInviteToast = (seconds?: number, onClose?: () => void) => {
             clearCurrentInterval();
             clearCurrentTimeout();
         };
-    }, [seconds, onClose]);
+    }, [open, seconds, onClose]);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
+        if (open) {
+            setAnimationClass(ANIMATIONS.toast.adaptive.slideInRight);
+        }
+
+        if (animationClass !== "hidden" && !open) {
+            setAnimationClass(ANIMATIONS.toast.adaptive.slideOutLeft);
+        }
+    }, [open]);
 
     const url = window.location.href;
 
-    return { url, width };
+    return { url, width, animationClass };
 };
 
 export default useInviteToast;

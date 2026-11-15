@@ -1,9 +1,9 @@
 @theme {
     --animate-gradient: gradient 15s ease infinite;
-    --animate-slide-in-right: slideInRight 0.5s ease;
-    --animate-slide-out-left: slideOutLeft 0.5s ease;
-    --animate-slide-out-down: slideOutDown 0.5s ease;
-    --animate-slide-in-up: slideInUp 0.5s ease;
+    --animate-slide-in-right: slideInRight 0.5s ease forwards;
+    --animate-slide-out-left: slideOutLeft 0.5s ease forwards;
+    --animate-slide-out-down: slideOutDown 0.5s ease forwards;
+    --animate-slide-in-up: slideInUp 0.5s ease forwards;
 
     @keyframes gradient {
         0% {

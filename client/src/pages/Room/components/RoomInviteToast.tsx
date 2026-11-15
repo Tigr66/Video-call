@@ -1,6 +1,5 @@
 import { CopyButton } from "@/components/CopyButton";
 import { X, Link } from "lucide-react";
-import { ANIMATIONS } from "@/constants/animations.constants";
 import useInviteToast from "../hooks/useInviteToast";
 
 interface RoomInviteToastProps {
@@ -10,11 +9,11 @@ interface RoomInviteToastProps {
 }
 
 const RoomInviteToast = ({ open, seconds, onClose }: RoomInviteToastProps) => {
-    const animationClass = open
-        ? ANIMATIONS.toast.adaptive.slideInRight
-        : ANIMATIONS.toast.adaptive.slideOutLeft;
-
-    const { url, width } = useInviteToast(seconds);
+    const { url, width, animationClass } = useInviteToast(
+        open,
+        seconds,
+        onClose,
+    );
 
     return (
         <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-50 sm:left-3 sm:translate-x-0">
