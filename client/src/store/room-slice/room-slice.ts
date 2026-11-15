@@ -3,7 +3,6 @@ import { createSlice } from "@reduxjs/toolkit";
 import { addRoomThunk, getRoomByCodeThunk } from "./room-thunks";
 
 const initialState: IRoomState = {
-    currentRoomCode: null,
     isSending: false,
     isLoading: false,
 };
@@ -17,9 +16,8 @@ const roomSlice = createSlice({
             .addCase(addRoomThunk.pending, (state) => {
                 state.isSending = true;
             })
-            .addCase(addRoomThunk.fulfilled, (state, action) => {
+            .addCase(addRoomThunk.fulfilled, (state) => {
                 state.isSending = false;
-                state.currentRoomCode = action.payload.code;
             })
             .addCase(addRoomThunk.rejected, (state) => {
                 state.isSending = false;
@@ -27,9 +25,8 @@ const roomSlice = createSlice({
             .addCase(getRoomByCodeThunk.pending, (state) => {
                 state.isLoading = true;
             })
-            .addCase(getRoomByCodeThunk.fulfilled, (state, action) => {
+            .addCase(getRoomByCodeThunk.fulfilled, (state) => {
                 state.isLoading = false;
-                state.currentRoomCode = action.payload.code;
             })
             .addCase(getRoomByCodeThunk.rejected, (state) => {
                 state.isLoading = false;
