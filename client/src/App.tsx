@@ -7,7 +7,7 @@ import { AppToastContainer } from "./components/AppToastContainer";
 
 import { appRoutes } from "./routes/app-routes";
 
-import "./index.css";
+import "./styles/index.css";
 
 const App = () => {
     return (

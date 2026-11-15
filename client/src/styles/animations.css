@@ -1,9 +1,9 @@
-@import "tailwindcss";
-
 @theme {
     --animate-gradient: gradient 15s ease infinite;
     --animate-slide-in-right: slideInRight 0.5s ease forwards;
     --animate-slide-out-left: slideOutLeft 0.5s ease forwards;
+    --animate-slide-out-down: slideOutDown 0.5s ease forwards;
+    --animate-slide-in-up: slideInUp 0.5s ease forwards;
 
     @keyframes gradient {
         0% {
@@ -42,10 +42,8 @@
             transform: translateX(calc(-100% - 20px));
         }
     }
-}
 
-@media (max-width: 639px) {
-    @keyframes slideOutLeft {
+    @keyframes slideOutDown {
         from {
             opacity: 1;
             transform: translate(-50%, 0);
@@ -56,10 +54,8 @@
             transform: translate(-50%, 100vh);
         }
     }
-}
 
-@media (max-width: 639px) {
-    @keyframes slideInRight {
+    @keyframes slideInUp {
         from {
             opacity: 0;
             transform: translate(-50%, 100vh);
