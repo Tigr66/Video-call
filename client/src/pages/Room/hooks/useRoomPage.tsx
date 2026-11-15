@@ -31,11 +31,11 @@ const useRoomPage = (code?: string) => {
 
     const { saveUserName } = useUserName();
 
-    const { currentRoomCode, isLoading } = useAppSelector(
-        (state) => state.room,
-    );
+    const { isLoading } = useAppSelector((state) => state.room);
 
+    const [roomFound, setRoomFound] = useState<boolean>(false);
     const [hasJoined, setHasJoined] = useState<boolean>(false);
+    const [openInviteToast, setOpenInviteToast] = useState<boolean>(false);
     const [hasCheckedRoom, setHasCheckedRoom] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>("");
     const [participants, setParticipants] = useState<Participant[]>([]);
@@ -44,6 +44,10 @@ const useRoomPage = (code?: string) => {
     const peerConnections = useRef(new Map<string, RTCPeerConnection>());
     const pendingCandidates = useRef(new Map<string, RTCIceCandidateInit[]>());
     const socket = useRef<WebSocket | null>(null);
+
+    const closeInviteToast = () => {
+        setOpenInviteToast(false);
+    };
 
     const getPeerConnectionById = (
         id: string,
@@ -339,9 +343,16 @@ const useRoomPage = (code?: string) => {
 
     useEffect(() => {
         if (code) {
-            dispatch(getRoomByCodeThunk(code)).finally(() => {
-                setHasCheckedRoom(true);
-            });
+            dispatch(getRoomByCodeThunk(code))
+                .then(() => {
+                    setRoomFound(true);
+                })
+                .catch(() => {
+                    setRoomFound(false);
+                })
+                .finally(() => {
+                    setHasCheckedRoom(true);
+                });
         }
     }, [dispatch, code]);
 
@@ -361,10 +372,22 @@ const useRoomPage = (code?: string) => {
         };
     }, [hasJoined, code, cleanUp]);
 
-    const roomNotFound =
-        hasCheckedRoom && !isLoading && currentRoomCode !== code;
+    useEffect(() => {
+        if (hasJoined) {
+            setOpenInviteToast(true);
+        }
+    }, [hasJoined]);
+
+    const roomNotFound = hasCheckedRoom && !isLoading && !roomFound;
 
     const renderJoinModal = hasCheckedRoom && !hasJoined && !roomNotFound;
+
+    const showRoomCode =
+        hasCheckedRoom &&
+        !isLoading &&
+        !renderJoinModal &&
+        !roomNotFound &&
+        code;
 
     const displayedParticipantCount =
         participants.length + (localStream.current ? 1 : 0);
@@ -376,10 +399,13 @@ const useRoomPage = (code?: string) => {
         userName,
         roomNotFound,
         renderJoinModal,
+        showRoomCode,
         isLoading,
         displayedParticipantCount,
+        openInviteToast,
         handleReady,
         endCall,
+        closeInviteToast,
     };
 };
 
