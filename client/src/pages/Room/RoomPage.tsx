@@ -1,8 +1,17 @@
 import { useParams } from "react-router-dom";
-import { JoinRoomModal, NotFoundRoom, RoomCode, Video } from "./components";
+import {
+    JoinRoomModal,
+    NotFoundRoom,
+    RoomCode,
+    RoomInviteToast,
+    Video,
+} from "./components";
 import { LoaderCircle, PhoneOff } from "lucide-react";
 import useRoomPage from "./hooks/useRoomPage";
 import "./styles.css";
+import { ANIMATIONS } from "@/constants/animations.constants";
+
+const INVITE_TOAST_SECONDS = 8;
 
 const RoomPage = () => {
     const { code } = useParams<{ code: string }>();
@@ -17,20 +26,30 @@ const RoomPage = () => {
         isLoading,
         hasJoined,
         displayedParticipantCount,
+        openInviteToast,
         endCall,
         handleReady,
+        closeInviteToast,
     } = useRoomPage(code);
 
     return (
         <div
-            className="h-screen flex flex-col
+            className={`h-screen relative flex flex-col overflow-clip
             bg-[linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab)]
             bg-size-[400%_400%]
-            animate-gradient"
+            ${ANIMATIONS.gradient}`}
         >
             {showRoomCode && <RoomCode code={code!} />}
 
             {renderJoinModal && <JoinRoomModal onReady={handleReady} />}
+
+            {hasJoined && (
+                <RoomInviteToast
+                    open={openInviteToast}
+                    onClose={closeInviteToast}
+                    seconds={INVITE_TOAST_SECONDS}
+                />
+            )}
 
             <div
                 className="flex flex-1 flex-col gap-1 items-center min-h-0 
